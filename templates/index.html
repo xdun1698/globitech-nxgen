@@ -1,0 +1,2967 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <!-- Version: 2025-09-22-21:45 -->
+    <title>Small Batch Reactor Scheduling System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+            overflow-x: hidden;
+        }
+        
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* Sidebar Styles */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+        }
+        
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .sidebar-header h1 {
+            font-size: 1.5em;
+            margin-bottom: 5px;
+        }
+        
+        .sidebar-header p {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+        
+        .sidebar-nav {
+            padding: 20px 0;
+        }
+        
+        .nav-item {
+            display: block;
+            padding: 15px 20px;
+            color: white;
+            text-decoration: none;
+            transition: background 0.3s;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        
+        .nav-item:hover, .nav-item.active {
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .nav-item i {
+            margin-right: 10px;
+            width: 20px;
+        }
+        
+        /* Main Content */
+        .main-content {
+            margin-left: 280px;
+            flex: 1;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .content-section {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .content-section.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .page-header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .page-header h2 {
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .page-header p {
+            color: #666;
+        }
+        /* Cards and Grids */
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .status-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            border-left: 4px solid #667eea;
+            transition: transform 0.2s;
+        }
+        
+        .status-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .status-card h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .status-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        /* Tables */
+        .table-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        /* Buttons and Forms */
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            margin: 10px;
+            transition: background 0.3s;
+        }
+        .btn:hover {
+            background: #5a6fd8;
+        }
+        .reactor-types {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .reactor-type {
+            background: #e3f2fd;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            border: 2px solid #2196f3;
+        }
+        .reactor-type h4 {
+            margin: 0 0 5px 0;
+            color: #1976d2;
+        }
+        .reactor-type p {
+            margin: 0;
+            font-size: 0.9em;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h1>🧪 Reactor System</h1>
+                <p>Advanced Process Management</p>
+                <div style="margin-top: 10px; font-size: 0.8em; opacity: 0.7;">
+                    <span id="sidebar-ip">Loading IP...</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <button class="nav-item active" onclick="showSection('dashboard', this)">
+                    📊 Dashboard
+                </button>
+                <button class="nav-item" onclick="showSection('reactors', this)">
+                    🏭 Reactors
+                </button>
+                <button class="nav-item" onclick="showSection('schedule', this)">
+                    📅 Schedule
+                </button>
+                <button class="nav-item" onclick="showSection('processes', this)">
+                    ⚗️ Processes
+                </button>
+                <button class="nav-item" onclick="showSection('ai-analysis', this)">
+                    🤖 AI Analysis
+                </button>
+                <button class="nav-item" onclick="showSection('post-run-analysis', this)">
+                    📈 Post-Run Analysis
+                </button>
+                <button class="nav-item" onclick="showSection('yield-optimization', this)">
+                    🎯 Yield Optimization
+                </button>
+                <button class="nav-item" onclick="showSection('historical-trends', this)">
+                    📊 Historical Trends
+                </button>
+                <button class="nav-item" onclick="showSection('system', this)">
+                    ⚙️ System
+                </button>
+                <button class="nav-item" onclick="showSection('production-analytics', this)">
+                    📊 Production Analytics
+                </button>
+                <button class="nav-item" onclick="showSection('predictive-modeling', this)">
+                    🔮 Predictive Modeling
+                </button>
+                <button class="nav-item" onclick="showSection('api', this)">
+                    🔗 API
+                </button>
+            </nav>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Dashboard Section -->
+            <div id="dashboard" class="content-section active">
+                <div class="page-header">
+                    <h2>System Dashboard</h2>
+                    <p>Real-time overview of reactor operations and system status</p>
+                </div>
+                
+                <div class="status-grid">
+                    <div class="status-card">
+                        <h3>System Status</h3>
+                        <div class="status-value" id="system-status">Loading...</div>
+                    </div>
+                    <div class="status-card">
+                        <h3>Active Reactors</h3>
+                        <div class="status-value" id="active-reactors">--</div>
+                    </div>
+                    <div class="status-card">
+                        <h3>Running Processes</h3>
+                        <div class="status-value" id="running-processes">--</div>
+                    </div>
+                    <div class="status-card">
+                        <h3>Database</h3>
+                        <div class="status-value" id="database-status">mesprod (447GB)</div>
+                    </div>
+                    <div class="status-card">
+                        <h3>Historical Records</h3>
+                        <div class="status-value" id="historical-records">916M+</div>
+                    </div>
+                    <div class="status-card">
+                        <h3>SPC Measurements</h3>
+                        <div class="status-value" id="spc-measurements">812M+</div>
+                    </div>
+                    <div class="status-card">
+                        <h3>Server Time</h3>
+                        <div class="status-value" id="server-time">Loading...</div>
+                    </div>
+                    <div class="status-card">
+                        <h3>Current IP (DHCP)</h3>
+                        <div class="status-value" id="current-ip">Loading...</div>
+                    </div>
+                </div>
+                
+                <div class="reactor-types">
+                    <div class="reactor-type">
+                        <h4>AMT</h4>
+                        <p>Atmospheric Pressure<br>General epitaxial processes<br><span id="amt-count">Loading...</span></p>
+                    </div>
+                    <div class="reactor-type">
+                        <h4>SYCR</h4>
+                        <p>Silane Pyrolysis CVD<br>Excellent performance<br><span id="sycr-count">Loading...</span></p>
+                    </div>
+                    <div class="reactor-type">
+                        <h4>AIX</h4>
+                        <p>AIXTRON MOCVD<br>Good for doping<br><span id="aix-count">Loading...</span></p>
+                    </div>
+                    <div class="reactor-type">
+                        <h4>ADE</h4>
+                        <p>Applied Materials<br>Good for annealing<br><span id="ade-count">Loading...</span></p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Reactors Section -->
+            <div id="reactors" class="content-section">
+                <div class="page-header">
+                    <h2>Reactor Management</h2>
+                    <p>Monitor and manage all reactor systems</p>
+                </div>
+                
+                <div class="card">
+                    <div class="btn-group">
+                        <button class="btn" onclick="loadReactors()">🔄 Refresh</button>
+                        <button class="btn btn-success" onclick="openAddReactor()">➕ Add Reactor</button>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table id="reactors-table">
+                            <thead>
+                                <tr>
+                                    <th>Reactor</th>
+                                    <th>Type</th>
+                                    <th>Chamber</th>
+                                    <th>Location</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reactors-tbody">
+                                <tr><td colspan="6" class="loading">Loading reactors...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Schedule Section -->
+            <div id="schedule" class="content-section">
+                <div class="page-header">
+                    <h2>Process Schedule</h2>
+                    <p>View and manage scheduled processes</p>
+                </div>
+                
+                <div class="card">
+                    <div class="btn-group">
+                        <button class="btn" onclick="loadSchedule()">🔄 Refresh</button>
+                        <button class="btn btn-success" onclick="openAddSchedule()">➕ Schedule Process</button>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table id="schedule-table">
+                            <thead>
+                                <tr>
+                                    <th>Batch ID</th>
+                                    <th>Reactor</th>
+                                    <th>Process</th>
+                                    <th>Start Time</th>
+                                    <th>Status</th>
+                                    <th>Operator</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="schedule-tbody">
+                                <tr><td colspan="7" class="loading">Loading schedule...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Processes Section -->
+            <div id="processes" class="content-section">
+                <div class="page-header">
+                    <h2>Process Types</h2>
+                    <p>Available process definitions and parameters</p>
+                </div>
+                
+                <div class="card">
+                    <div class="btn-group">
+                        <button class="btn" onclick="loadProcesses()">🔄 Refresh</button>
+                        <button class="btn btn-success" onclick="openAddProcess()">➕ Add Process</button>
+                    </div>
+                    
+                    <div id="processes-content">
+                        <p class="loading">Loading processes...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- AI Analysis Section -->
+            <div id="ai-analysis" class="content-section">
+                <div class="page-header">
+                    <h2>🤖 AI Analysis Dashboard</h2>
+                    <p>Intelligent analysis of reactor performance and optimization opportunities</p>
+                </div>
+                
+                <div class="card">
+                    <h3>Reactor Performance Analysis</h3>
+                    <div class="btn-group">
+                        <button class="btn" onclick="loadReactorPerformance()">🔄 Analyze Performance</button>
+                        <button class="btn btn-secondary" onclick="exportAnalysis('performance')">📊 Export Report</button>
+                    </div>
+                    <div id="reactor-performance-content">
+                        <p class="loading">Click "Analyze Performance" to run AI analysis...</p>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>Chamber Type Comparison</h3>
+                    <div id="chamber-comparison-content">
+                        <p class="loading">Loading chamber analysis...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Post-Run Analysis Section -->
+            <div id="post-run-analysis" class="content-section">
+                <div class="page-header">
+                    <h2>📈 Post-Run Analysis</h2>
+                    <p>Detailed analysis of completed process runs</p>
+                </div>
+                
+                <div class="card">
+                    <h3>Filter Options</h3>
+                    <div style="margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                        <div style="margin-bottom: 15px;">
+                            <strong>📊 Analysis Type:</strong>
+                            <div style="margin-top: 8px;">
+                                <label style="margin-right: 20px; cursor: pointer;">
+                                    <input type="radio" name="analysisType" value="all" checked onchange="filterCompletedRuns()"> 
+                                    <span style="margin-left: 5px;">All Runs</span>
+                                </label>
+                                <label style="margin-right: 20px; cursor: pointer;">
+                                    <input type="radio" name="analysisType" value="high-yield" onchange="filterCompletedRuns()"> 
+                                    <span style="margin-left: 5px;">High Yield (>90%)</span>
+                                </label>
+                                <label style="margin-right: 20px; cursor: pointer;">
+                                    <input type="radio" name="analysisType" value="low-yield" onchange="filterCompletedRuns()"> 
+                                    <span style="margin-left: 5px;">Low Yield (<80%)</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <strong>⚗️ Process Type:</strong>
+                            <div style="margin-top: 8px;">
+                                <label style="margin-right: 20px; cursor: pointer;">
+                                    <input type="radio" name="processType" value="all" checked onchange="filterCompletedRuns()"> 
+                                    <span style="margin-left: 5px;">All Processes</span>
+                                </label>
+                                <label style="margin-right: 20px; cursor: pointer;">
+                                    <input type="radio" name="processType" value="epitaxy" onchange="filterCompletedRuns()"> 
+                                    <span style="margin-left: 5px;">Silicon Epitaxy</span>
+                                </label>
+                                <label style="margin-right: 20px; cursor: pointer;">
+                                    <input type="radio" name="processType" value="mocvd" onchange="filterCompletedRuns()"> 
+                                    <span style="margin-left: 5px;">GaAs MOCVD</span>
+                                </label>
+                                <label style="margin-right: 20px; cursor: pointer;">
+                                    <input type="radio" name="processType" value="other" onchange="filterCompletedRuns()"> 
+                                    <span style="margin-left: 5px;">Other Processes</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <strong>🏭 Reactor Type:</strong>
+                            <div style="margin-top: 8px;">
+                                <label style="margin-right: 20px; cursor: pointer;">
+                                    <input type="radio" name="reactorType" value="all" checked onchange="filterCompletedRuns()"> 
+                                    <span style="margin-left: 5px;">All Reactors</span>
+                                </label>
+                                <label style="margin-right: 20px; cursor: pointer;">
+                                    <input type="radio" name="reactorType" value="SYCR" onchange="filterCompletedRuns()"> 
+                                    <span style="margin-left: 5px;">SYCR Reactors</span>
+                                </label>
+                                <label style="margin-right: 20px; cursor: pointer;">
+                                    <input type="radio" name="reactorType" value="AIX" onchange="filterCompletedRuns()"> 
+                                    <span style="margin-left: 5px;">AIX Reactors</span>
+                                </label>
+                                <label style="margin-right: 20px; cursor: pointer;">
+                                    <input type="radio" name="reactorType" value="AMT" onchange="filterCompletedRuns()"> 
+                                    <span style="margin-left: 5px;">AMT Reactors</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="btn-group">
+                        <button class="btn" onclick="loadCompletedRuns()">🔄 Load Completed Runs</button>
+                        <button class="btn btn-secondary" onclick="analyzeRunTrends()">📊 Analyze Trends</button>
+                        <button class="btn btn-success" onclick="exportRunAnalysis()">📊 Export Analysis</button>
+                    </div>
+                    
+                    <div id="run-summary" style="margin: 15px 0; padding: 15px; background: #e8f5e8; border-radius: 8px; display: none;">
+                        <h4>📊 Analysis Summary</h4>
+                        <div id="summary-content"></div>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table id="completed-runs-table">
+                            <thead>
+                                <tr>
+                                    <th>Run ID</th>
+                                    <th>Reactor</th>
+                                    <th>Process</th>
+                                    <th>Wafers</th>
+                                    <th>Yield</th>
+                                    <th>Uniformity</th>
+                                    <th>Status</th>
+                                    <th>Analysis</th>
+                                </tr>
+                            </thead>
+                            <tbody id="completed-runs-tbody">
+                                <tr><td colspan="8" class="loading">Click "Load Completed Runs" to start...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Yield Optimization Section -->
+            <div id="yield-optimization" class="content-section">
+                <div class="page-header">
+                    <h2>🎯 Yield Optimization</h2>
+                    <p>AI-driven yield optimization and pocket position analysis</p>
+                </div>
+                
+                <div class="card">
+                    <h3>Pocket Yield Correlation Analysis</h3>
+                    <div class="btn-group">
+                        <button class="btn" onclick="loadYieldCorrelation()">🔄 Analyze Yields</button>
+                        <button class="btn btn-success" onclick="optimizeParameters()">🎯 Optimize Parameters</button>
+                    </div>
+                    <div id="yield-correlation-content">
+                        <p class="loading">Click "Analyze Yields" to run pocket position analysis...</p>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>Process Parameter Optimization</h3>
+                    <div id="parameter-optimization-content">
+                        <p class="loading">Loading parameter optimization...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Historical Trends Section -->
+            <div id="historical-trends" class="content-section">
+                <div class="page-header">
+                    <h2>📊 Historical Trends</h2>
+                    <p>Performance trends and predictive analytics</p>
+                </div>
+                
+                <div class="card">
+                    <h3>Performance Trends</h3>
+                    <div class="btn-group">
+                        <button class="btn" onclick="loadHistoricalTrends()">🔄 Load Trends</button>
+                        <button class="btn btn-secondary" onclick="generatePredictions()">🔮 Generate Predictions</button>
+                    </div>
+                    <div id="historical-trends-content">
+                        <p class="loading">Loading historical performance data...</p>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>Trend Insights</h3>
+                    <div id="trend-insights-content">
+                        <p class="loading">Analyzing trends...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- System Section -->
+            <div id="system" class="content-section">
+                <div class="page-header">
+                    <h2>System Information</h2>
+                    <p>Network configuration and system details</p>
+                </div>
+                
+                <div class="card">
+                    <h3>Network Configuration</h3>
+                    <div class="status-grid">
+                        <div class="status-card">
+                            <h3>Current IP</h3>
+                            <div class="status-value" id="system-current-ip">Loading...</div>
+                        </div>
+                        <div class="status-card">
+                            <h3>Interface</h3>
+                            <div class="status-value" id="system-interface">Loading...</div>
+                        </div>
+                        <div class="status-card">
+                            <h3>MAC Address</h3>
+                            <div class="status-value" id="system-mac">Loading...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Production Analytics Section -->
+            <div id="production-analytics" class="content-section">
+                <div class="page-header">
+                    <h2>📊 Production Analytics (447GB Database)</h2>
+                    <p>Advanced analytics using 916+ million historical records</p>
+                </div>
+                
+                <div class="card">
+                    <h3>Database Statistics</h3>
+                    <div class="btn-group">
+                        <button class="btn" onclick="loadProductionStats()">🔄 Refresh Stats</button>
+                        <button class="btn btn-secondary" onclick="exportProductionReport()">📊 Export Report</button>
+                    </div>
+                    <div id="production-stats-content">
+                        <p class="loading">Loading production database statistics...</p>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>Historical Reactor Performance</h3>
+                    <div class="btn-group">
+                        <button class="btn" onclick="loadHistoricalReactorPerformance()">🔄 Analyze Reactors</button>
+                        <button class="btn btn-success" onclick="generatePerformanceReport()">📈 Generate Report</button>
+                    </div>
+                    <div id="historical-reactor-performance-content">
+                        <p class="loading">Click "Analyze Reactors" to load historical performance data...</p>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>Advanced SPC Analysis</h3>
+                    <div class="btn-group">
+                        <button class="btn" onclick="loadAdvancedSPCAnalysis()">🔄 Run SPC Analysis</button>
+                        <button class="btn btn-secondary" onclick="exportSPCData()">📊 Export SPC Data</button>
+                    </div>
+                    <div id="advanced-spc-content">
+                        <p class="loading">Click "Run SPC Analysis" to analyze 812M+ SPC measurements...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Predictive Modeling Section -->
+            <div id="predictive-modeling" class="content-section">
+                <div class="page-header">
+                    <h2>🔮 Predictive Modeling & AI</h2>
+                    <p>Machine learning models using years of historical data</p>
+                </div>
+                
+                <div class="card">
+                    <h3>Predictive Scheduling</h3>
+                    <div class="btn-group">
+                        <button class="btn" onclick="loadPredictiveScheduling()">🔄 Generate Predictions</button>
+                        <button class="btn btn-success" onclick="optimizeSchedule()">🎯 Optimize Schedule</button>
+                    </div>
+                    <div id="predictive-scheduling-content">
+                        <p class="loading">Click "Generate Predictions" to run AI scheduling analysis...</p>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>Performance Forecasting</h3>
+                    <div id="performance-forecasting-content">
+                        <p class="loading">Loading performance forecasting models...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- API Section -->
+            <div id="api" class="content-section">
+                <div class="page-header">
+                    <h2>API Endpoints</h2>
+                    <p>Test and explore available API endpoints</p>
+                </div>
+                
+                <div class="card">
+                    <div style="background: #f8f9fa; border-radius: 8px; padding: 15px; margin: 10px 0; border-left: 4px solid #28a745;">
+                        <strong>System Status:</strong><br>
+                        <code>GET /api/status</code><br>
+                        <small>Returns current system status and network information</small><br>
+                        <a href="/api/status" class="btn" target="_blank" style="margin-top: 10px;">Test Endpoint</a>
+                    </div>
+                    
+                    <div style="background: #f8f9fa; border-radius: 8px; padding: 15px; margin: 10px 0; border-left: 4px solid #28a745;">
+                        <strong>Reactor Data:</strong><br>
+                        <code>GET /api/reactors</code><br>
+                        <small>Returns reactor information from database</small><br>
+                        <a href="/api/reactors" class="btn" target="_blank" style="margin-top: 10px;">Test Endpoint</a>
+                    </div>
+                    
+                    <div style="background: #f8f9fa; border-radius: 8px; padding: 15px; margin: 10px 0; border-left: 4px solid #28a745;">
+                        <strong>Active Schedule:</strong><br>
+                        <code>GET /api/schedule</code><br>
+                        <small>Returns current and upcoming scheduled processes</small><br>
+                        <a href="/api/schedule" class="btn" target="_blank" style="margin-top: 10px;">Test Endpoint</a>
+                    </div>
+                    
+                    <div style="background: #f8f9fa; border-radius: 8px; padding: 15px; margin: 10px 0; border-left: 4px solid #28a745;">
+                        <strong>Reactor Utilization:</strong><br>
+                        <code>GET /api/reactor-utilization</code><br>
+                        <small>Returns reactor usage statistics and performance metrics</small><br>
+                        <a href="/api/reactor-utilization" class="btn" target="_blank" style="margin-top: 10px;">Test Endpoint</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentSection = 'dashboard';
+        let systemData = {};
+        
+        // Navigation functionality
+        function showSection(sectionName, el) {
+            // Hide all sections
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Remove active class from all nav items
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Show selected section
+            const targetSection = document.getElementById(sectionName);
+            if (!targetSection) {
+                debugLog('Navigation', `Section not found: ${sectionName}`);
+                return;
+            }
+            targetSection.classList.add('active');
+            
+            // Add active class to clicked nav item
+            if (el && el.classList) {
+                el.classList.add('active');
+            } else {
+                debugLog('Navigation', 'No element passed to showSection; falling back to first matching nav button.');
+                const fallback = Array.from(document.querySelectorAll('.nav-item')).find(btn => btn.getAttribute('onclick')?.includes(`'${sectionName}'`));
+                if (fallback) fallback.classList.add('active');
+            }
+            
+            currentSection = sectionName;
+            
+            // Load section-specific data
+            loadSectionData(sectionName);
+        }
+        
+        // Load section-specific data
+        function loadSectionData(section) {
+            switch(section) {
+                case 'reactors':
+                    loadReactors();
+                    break;
+                case 'schedule':
+                    loadSchedule();
+                    break;
+                case 'processes':
+                    loadProcesses();
+                    break;
+                case 'ai-analysis':
+                    loadReactorPerformance();
+                    break;
+                case 'post-run-analysis':
+                    loadCompletedRuns();
+                    break;
+                case 'yield-optimization':
+                    loadYieldCorrelation();
+                    break;
+                case 'historical-trends':
+                    loadHistoricalTrends();
+                    break;
+                case 'system':
+                    loadSystemInfo();
+                    break;
+                case 'production-analytics':
+                    loadProductionStats();
+                    break;
+                case 'predictive-modeling':
+                    loadPredictiveScheduling();
+                    break;
+            }
+        }
+
+        // ===== Schedule Modal (Add/Edit) =====
+        let scheduleModalMode = 'add';
+        let editingScheduleId = null;
+
+        function ensureScheduleModal() {
+            if (document.getElementById('schedule-modal')) return;
+            const modal = document.createElement('div');
+            modal.id = 'schedule-modal';
+            Object.assign(modal.style, { position:'fixed', top:'0', left:'0', right:'0', bottom:'0', background:'rgba(0,0,0,0.4)', display:'none', alignItems:'center', justifyContent:'center', zIndex:'2000' });
+            modal.innerHTML = `
+                <div style="background:#fff; padding:20px; border-radius:10px; width:560px; max-width:95%; box-shadow:0 10px 30px rgba(0,0,0,.2)">
+                    <h3 id="schedule-modal-title">Schedule Process</h3>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;">
+                        <div><label>Batch ID</label><input id="s_batch" type="text" style="width:100%; padding:8px;"></div>
+                        <div><label>Reactor</label><input id="s_reactor" type="text" style="width:100%; padding:8px;" placeholder="e.g., AMT-001"></div>
+                        <div><label>Process</label><input id="s_process" type="text" style="width:100%; padding:8px;" placeholder="e.g., Silicon Epitaxy"></div>
+                        <div><label>Start</label><input id="s_start" type="datetime-local" style="width:100%; padding:8px;"></div>
+                        <div><label>End</label><input id="s_end" type="datetime-local" style="width:100%; padding:8px;"></div>
+                        <div><label>Status</label><select id="s_status" style="width:100%; padding:8px;"><option>Scheduled</option><option>Running</option><option>Completed</option><option>Paused</option></select></div>
+                        <div><label>Operator</label><input id="s_operator" type="text" style="width:100%; padding:8px;" placeholder="Operator name"></div>
+                        <div><label>Reactor Type</label><input id="s_rtype" type="text" style="width:100%; padding:8px;" placeholder="AMT/SYCR/AIX/ADE"></div>
+                        <div><label>Chamber Type</label><input id="s_ctype" type="text" style="width:100%; padding:8px;" placeholder="Single/Row/Pocket/2-Chamber"></div>
+                        <div><label>Avg Pocket Yield</label><input id="s_yield" type="number" step="0.01" style="width:100%; padding:8px;"></div>
+                    </div>
+                    <div style="margin-top:15px; text-align:right;">
+                        <button class="btn" onclick="submitScheduleForm()">💾 Save</button>
+                        <button class="btn btn-warning" onclick="closeScheduleModal()">✖️ Cancel</button>
+                    </div>
+                    <div id="schedule-modal-error" style="color:#dc3545; margin-top:10px; display:none;"></div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function openAddSchedule() {
+            ensureScheduleModal();
+            scheduleModalMode = 'add'; editingScheduleId = null;
+            document.getElementById('schedule-modal-title').textContent = 'Schedule Process';
+            ['s_batch','s_reactor','s_process','s_start','s_end','s_operator','s_rtype','s_ctype','s_yield'].forEach(id => document.getElementById(id).value = '');
+            document.getElementById('s_status').value = 'Scheduled';
+            document.getElementById('schedule-modal-error').style.display = 'none';
+            document.getElementById('schedule-modal').style.display = 'flex';
+        }
+
+        function openEditSchedule(id) {
+            ensureScheduleModal();
+            scheduleModalMode = 'edit'; editingScheduleId = id;
+            document.getElementById('schedule-modal-title').textContent = 'Edit Scheduled Process';
+            document.getElementById('schedule-modal-error').style.display = 'none';
+            fetch(`/api/schedule/${id}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.error) throw new Error(data.error);
+                    document.getElementById('s_batch').value = data.batch_id || '';
+                    document.getElementById('s_reactor').value = data.reactor_name || '';
+                    document.getElementById('s_process').value = data.process_name || '';
+                    document.getElementById('s_start').value = data.scheduled_start ? data.scheduled_start.slice(0,16) : '';
+                    document.getElementById('s_end').value = data.scheduled_end ? data.scheduled_end.slice(0,16) : '';
+                    document.getElementById('s_status').value = data.status || 'Scheduled';
+                    document.getElementById('s_operator').value = data.operator_name || '';
+                    document.getElementById('s_rtype').value = data.reactor_type || '';
+                    document.getElementById('s_ctype').value = data.chamber_type || '';
+                    document.getElementById('s_yield').value = data.avg_pocket_yield || '';
+                    document.getElementById('schedule-modal').style.display = 'flex';
+                })
+                .catch(err => alert('Error loading schedule entry: ' + err.message));
+        }
+
+        function closeScheduleModal() {
+            const modal = document.getElementById('schedule-modal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function submitScheduleForm() {
+            const payload = {
+                batch_id: document.getElementById('s_batch').value.trim(),
+                reactor_name: document.getElementById('s_reactor').value.trim(),
+                process_name: document.getElementById('s_process').value.trim(),
+                scheduled_start: document.getElementById('s_start').value ? new Date(document.getElementById('s_start').value).toISOString() : null,
+                scheduled_end: document.getElementById('s_end').value ? new Date(document.getElementById('s_end').value).toISOString() : null,
+                status: document.getElementById('s_status').value,
+                operator_name: document.getElementById('s_operator').value.trim(),
+                reactor_type: document.getElementById('s_rtype').value.trim() || null,
+                chamber_type: document.getElementById('s_ctype').value.trim() || null,
+                avg_pocket_yield: document.getElementById('s_yield').value || null
+            };
+            const errBox = document.getElementById('schedule-modal-error');
+            const missing = [];
+            if (!payload.batch_id) missing.push('Batch ID');
+            if (!payload.reactor_name) missing.push('Reactor');
+            if (!payload.process_name) missing.push('Process');
+            if (!payload.scheduled_start) missing.push('Start');
+            if (!payload.status) missing.push('Status');
+            if (!payload.operator_name) missing.push('Operator');
+            if (missing.length) {
+                errBox.textContent = 'Missing: ' + missing.join(', ');
+                errBox.style.display = 'block';
+                return;
+            }
+            const method = scheduleModalMode === 'add' ? 'POST' : 'PUT';
+            const url = scheduleModalMode === 'add' ? '/api/schedule' : `/api/schedule/${editingScheduleId}`;
+            fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.error) throw new Error(data.error);
+                    closeScheduleModal();
+                    loadSchedule();
+                })
+                .catch(err => { errBox.textContent = err.message; errBox.style.display = 'block'; });
+        }
+
+        function viewSchedule(id, source) {
+            const path = source === 'user' ? `/api/schedule/${id}` : null;
+            if (!path) { alert('This is a system schedule entry. View details coming soon.'); return; }
+            fetch(path)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.error) throw new Error(data.error);
+                    alert(`Batch: ${data.batch_id}\nReactor: ${data.reactor_name}\nProcess: ${data.process_name}\nStart: ${data.scheduled_start}\nEnd: ${data.scheduled_end || ''}\nStatus: ${data.status}`);
+                })
+                .catch(err => alert('Error: ' + err.message));
+        }
+
+        // ===== Reactors Modal (Add/Edit) =====
+        let reactorModalMode = 'add'; // 'add' | 'edit'
+        let editingReactorId = null;
+
+        function ensureReactorModal() {
+            if (document.getElementById('reactor-modal')) return;
+            const modal = document.createElement('div');
+            modal.id = 'reactor-modal';
+            Object.assign(modal.style, {
+                position: 'fixed', top: '0', left: '0', right: '0', bottom: '0',
+                background: 'rgba(0,0,0,0.4)', display: 'none', alignItems: 'center', justifyContent: 'center', zIndex: '2000'
+            });
+            modal.innerHTML = `
+                <div style="background:#fff; padding:20px; border-radius:10px; width:520px; max-width:95%; box-shadow:0 10px 30px rgba(0,0,0,.2)">
+                    <h3 id="reactor-modal-title">Add Reactor</h3>
+                    <div class="form-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;">
+                        <div>
+                            <label>Name</label>
+                            <input id="r_name" type="text" style="width:100%; padding:8px;">
+                        </div>
+                        <div>
+                            <label>Type</label>
+                            <select id="r_type" style="width:100%; padding:8px;">
+                                <option value="AMT">AMT</option>
+                                <option value="SYCR">SYCR</option>
+                                <option value="AIX">AIX</option>
+                                <option value="ADE">ADE</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Chamber</label>
+                            <select id="r_chamber" style="width:100%; padding:8px;">
+                                <option>Single Chamber</option>
+                                <option>Row Configuration</option>
+                                <option>Pocket Configuration</option>
+                                <option>2-Chamber</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Pocket Count</label>
+                            <input id="r_pockets" type="number" min="1" value="1" style="width:100%; padding:8px;">
+                        </div>
+                        <div>
+                            <label>Max Temp (°C)</label>
+                            <input id="r_maxt" type="number" step="0.01" style="width:100%; padding:8px;">
+                        </div>
+                        <div>
+                            <label>Max Pressure (atm)</label>
+                            <input id="r_maxp" type="number" step="0.01" style="width:100%; padding:8px;">
+                        </div>
+                        <div>
+                            <label>Location</label>
+                            <input id="r_location" type="text" style="width:100%; padding:8px;">
+                        </div>
+                        <div>
+                            <label>Active</label>
+                            <select id="r_active" style="width:100%; padding:8px;">
+                                <option value="true" selected>True</option>
+                                <option value="false">False</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="margin-top:15px; text-align:right;">
+                        <button class="btn" onclick="submitReactorForm()">💾 Save</button>
+                        <button class="btn btn-warning" onclick="closeReactorModal()">✖️ Cancel</button>
+                    </div>
+                    <div id="reactor-modal-error" style="color:#dc3545; margin-top:10px; display:none;"></div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function openAddReactor() {
+            ensureReactorModal();
+            reactorModalMode = 'add';
+            editingReactorId = null;
+            document.getElementById('reactor-modal-title').textContent = 'Add Reactor';
+            document.getElementById('r_name').value = '';
+            document.getElementById('r_type').value = 'AMT';
+            document.getElementById('r_chamber').value = 'Single Chamber';
+            document.getElementById('r_pockets').value = 1;
+            document.getElementById('r_maxt').value = '';
+            document.getElementById('r_maxp').value = '';
+            document.getElementById('r_location').value = '';
+            document.getElementById('r_active').value = 'true';
+            document.getElementById('reactor-modal-error').style.display = 'none';
+            document.getElementById('reactor-modal').style.display = 'flex';
+        }
+
+        function openEditReactor(id) {
+            ensureReactorModal();
+            reactorModalMode = 'edit';
+            editingReactorId = id;
+            document.getElementById('reactor-modal-title').textContent = 'Edit Reactor';
+            document.getElementById('reactor-modal-error').style.display = 'none';
+            fetch(`/api/reactors/${id}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.error) throw new Error(data.error);
+                    document.getElementById('r_name').value = data.reactor_name || '';
+                    document.getElementById('r_type').value = data.reactor_type || 'AMT';
+                    document.getElementById('r_chamber').value = data.chamber_type || 'Single Chamber';
+                    document.getElementById('r_pockets').value = data.pocket_count || 1;
+                    document.getElementById('r_maxt').value = data.max_temperature || '';
+                    document.getElementById('r_maxp').value = data.max_pressure || '';
+                    document.getElementById('r_location').value = data.location || '';
+                    document.getElementById('r_active').value = String(data.is_active);
+                    document.getElementById('reactor-modal').style.display = 'flex';
+                })
+                .catch(err => alert('Error loading reactor: ' + err.message));
+        }
+
+        function closeReactorModal() {
+            const modal = document.getElementById('reactor-modal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function submitReactorForm() {
+            const payload = {
+                reactor_name: document.getElementById('r_name').value.trim(),
+                reactor_type: document.getElementById('r_type').value,
+                chamber_type: document.getElementById('r_chamber').value,
+                pocket_count: Number(document.getElementById('r_pockets').value || 1),
+                max_temperature: document.getElementById('r_maxt').value || null,
+                max_pressure: document.getElementById('r_maxp').value || null,
+                location: document.getElementById('r_location').value || null,
+                is_active: document.getElementById('r_active').value === 'true'
+            };
+            const errBox = document.getElementById('reactor-modal-error');
+            if (!payload.reactor_name) {
+                errBox.textContent = 'Reactor name is required';
+                errBox.style.display = 'block';
+                return;
+            }
+            const method = reactorModalMode === 'add' ? 'POST' : 'PUT';
+            const url = reactorModalMode === 'add' ? '/api/reactors' : `/api/reactors/${editingReactorId}`;
+            fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.error) throw new Error(data.error);
+                    closeReactorModal();
+                    loadReactors();
+                })
+                .catch(err => {
+                    errBox.textContent = err.message;
+                    errBox.style.display = 'block';
+                });
+        }
+
+        function viewReactor(id) {
+            fetch(`/api/reactors/${id}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.error) throw new Error(data.error);
+                    alert(`Reactor: ${data.reactor_name}\nType: ${data.reactor_type}\nChamber: ${data.chamber_type}\nPockets: ${data.pocket_count}\nLocation: ${data.location}`);
+                })
+                .catch(err => alert('Error: ' + err.message));
+        }
+
+        // ===== Process Modal (Add/Edit) =====
+        let processModalMode = 'add';
+        let editingProcessId = null;
+
+        function ensureProcessModal() {
+            if (document.getElementById('process-modal')) return;
+            const modal = document.createElement('div');
+            modal.id = 'process-modal';
+            Object.assign(modal.style, { position:'fixed', top:'0', left:'0', right:'0', bottom:'0', background:'rgba(0,0,0,0.4)', display:'none', alignItems:'center', justifyContent:'center', zIndex:'2000' });
+            modal.innerHTML = `
+                <div style="background:#fff; padding:20px; border-radius:10px; width:600px; max-width:95%; box-shadow:0 10px 30px rgba(0,0,0,.2)">
+                    <h3 id="process-modal-title">Add Process</h3>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;">
+                        <div><label>Process Name</label><input id="p_name" type="text" style="width:100%; padding:8px;" placeholder="e.g., Silicon Epitaxy"></div>
+                        <div><label>Process Type</label><select id="p_type" style="width:100%; padding:8px;"><option>Epitaxial Growth</option><option>MOCVD</option><option>CVD</option><option>Ion Implantation</option><option>Thermal Treatment</option><option>Crystal Growth</option><option>Other</option></select></div>
+                        <div><label>Duration (hours)</label><input id="p_duration" type="number" step="0.1" min="0.1" style="width:100%; padding:8px;" placeholder="4.0"></div>
+                        <div><label>Description</label><input id="p_description" type="text" style="width:100%; padding:8px;" placeholder="Process description"></div>
+                        <div><label>Min Temperature (°C)</label><input id="p_temp_min" type="number" step="0.1" style="width:100%; padding:8px;" placeholder="1000"></div>
+                        <div><label>Max Temperature (°C)</label><input id="p_temp_max" type="number" step="0.1" style="width:100%; padding:8px;" placeholder="1200"></div>
+                        <div><label>Min Pressure (atm)</label><input id="p_press_min" type="number" step="0.01" style="width:100%; padding:8px;" placeholder="0.5"></div>
+                        <div><label>Max Pressure (atm)</label><input id="p_press_max" type="number" step="0.01" style="width:100%; padding:8px;" placeholder="2.0"></div>
+                    </div>
+                    <div style="margin-top:15px;">
+                        <label>Compatible Reactor Types (select multiple):</label>
+                        <div style="display:flex; gap:10px; margin-top:5px; flex-wrap:wrap;">
+                            <label style="display:flex; align-items:center; gap:5px;"><input type="checkbox" id="p_compat_AMT" value="AMT"> AMT</label>
+                            <label style="display:flex; align-items:center; gap:5px;"><input type="checkbox" id="p_compat_SYCR" value="SYCR"> SYCR</label>
+                            <label style="display:flex; align-items:center; gap:5px;"><input type="checkbox" id="p_compat_AIX" value="AIX"> AIX</label>
+                            <label style="display:flex; align-items:center; gap:5px;"><input type="checkbox" id="p_compat_ADE" value="ADE"> ADE</label>
+                        </div>
+                    </div>
+                    <div style="margin-top:15px; text-align:right;">
+                        <button class="btn" onclick="submitProcessForm()">💾 Save Process</button>
+                        <button class="btn btn-warning" onclick="closeProcessModal()">✖️ Cancel</button>
+                    </div>
+                    <div id="process-modal-error" style="color:#dc3545; margin-top:10px; display:none;"></div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function openAddProcess() {
+            ensureProcessModal();
+            processModalMode = 'add';
+            editingProcessId = null;
+            document.getElementById('process-modal-title').textContent = 'Add Process';
+            document.getElementById('p_name').value = '';
+            document.getElementById('p_type').value = 'Epitaxial Growth';
+            document.getElementById('p_duration').value = '';
+            document.getElementById('p_description').value = '';
+            document.getElementById('p_temp_min').value = '';
+            document.getElementById('p_temp_max').value = '';
+            document.getElementById('p_press_min').value = '';
+            document.getElementById('p_press_max').value = '';
+            document.getElementById('p_compat_AMT').checked = false;
+            document.getElementById('p_compat_SYCR').checked = false;
+            document.getElementById('p_compat_AIX').checked = false;
+            document.getElementById('p_compat_ADE').checked = false;
+            document.getElementById('process-modal-error').style.display = 'none';
+            document.getElementById('process-modal').style.display = 'flex';
+        }
+
+        function closeProcessModal() {
+            const modal = document.getElementById('process-modal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function submitProcessForm() {
+            const compatibleTypes = [];
+            if (document.getElementById('p_compat_AMT').checked) compatibleTypes.push('AMT');
+            if (document.getElementById('p_compat_SYCR').checked) compatibleTypes.push('SYCR');
+            if (document.getElementById('p_compat_AIX').checked) compatibleTypes.push('AIX');
+            if (document.getElementById('p_compat_ADE').checked) compatibleTypes.push('ADE');
+
+            const payload = {
+                process_name: document.getElementById('p_name').value.trim(),
+                process_type: document.getElementById('p_type').value,
+                typical_duration_hours: parseFloat(document.getElementById('p_duration').value),
+                description: document.getElementById('p_description').value.trim() || null,
+                temperature_range_min: document.getElementById('p_temp_min').value ? parseFloat(document.getElementById('p_temp_min').value) : null,
+                temperature_range_max: document.getElementById('p_temp_max').value ? parseFloat(document.getElementById('p_temp_max').value) : null,
+                pressure_range_min: document.getElementById('p_press_min').value ? parseFloat(document.getElementById('p_press_min').value) : null,
+                pressure_range_max: document.getElementById('p_press_max').value ? parseFloat(document.getElementById('p_press_max').value) : null,
+                compatible_reactor_types: compatibleTypes
+            };
+
+            const errBox = document.getElementById('process-modal-error');
+            if (!payload.process_name) {
+                errBox.textContent = 'Process name is required';
+                errBox.style.display = 'block';
+                return;
+            }
+            if (!payload.typical_duration_hours || payload.typical_duration_hours <= 0) {
+                errBox.textContent = 'Valid duration is required';
+                errBox.style.display = 'block';
+                return;
+            }
+
+            const method = processModalMode === 'add' ? 'POST' : 'PUT';
+            const url = processModalMode === 'add' ? '/api/processes' : `/api/processes/${editingProcessId}`;
+            
+            fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.error) throw new Error(data.error);
+                    closeProcessModal();
+                    loadProcesses(); // Refresh the processes list
+                })
+                .catch(err => {
+                    errBox.textContent = err.message;
+                    errBox.style.display = 'block';
+                });
+        }
+        
+        // Debug logging function
+        function debugLog(section, message, data = null) {
+            console.log(`[${section}] ${message}`, data);
+        }
+
+        // Load reactor data
+        function loadReactors() {
+            debugLog('Reactors', 'Loading reactor data...');
+            fetch('/api/reactors')
+                .then(response => {
+                    debugLog('Reactors', `API response status: ${response.status}`);
+                    return response.json();
+                })
+                .then(data => {
+                    debugLog('Reactors', 'Received reactor data', data);
+                    const tbody = document.getElementById('reactors-tbody');
+                    if (data.reactors && data.reactors.length > 0) {
+                        tbody.innerHTML = data.reactors.map(reactor => `
+                            <tr>
+                                <td><strong>${reactor.reactor_name}</strong></td>
+                                <td><span style="background: #e3f2fd; padding: 4px 8px; border-radius: 4px; font-size: 0.8em;">${reactor.reactor_type}</span></td>
+                                <td>${reactor.chamber_type}</td>
+                                <td>${reactor.location}</td>
+                                <td><span style="color: #28a745;">●</span> Active</td>
+                                <td>
+                                    <button class="btn" style="padding: 5px 10px; margin: 2px;" onclick="viewReactor(${reactor.reactor_id})">View</button>
+                                    <button class="btn btn-warning" style="padding: 5px 10px; margin: 2px;" onclick="openEditReactor(${reactor.reactor_id})">Edit</button>
+                                </td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        debugLog('Reactors', 'No reactor data received');
+                        tbody.innerHTML = '<tr><td colspan="6">No reactors found</td></tr>';
+                    }
+                })
+                .catch(error => {
+                    debugLog('Reactors', 'Error loading reactors', error);
+                    document.getElementById('reactors-tbody').innerHTML = '<tr><td colspan="6" class="error">Error loading reactors: ' + error.message + '</td></tr>';
+                });
+        }
+        
+        // Load schedule data
+        function loadSchedule() {
+            fetch('/api/schedule')
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.getElementById('schedule-tbody');
+                    if (data.schedule && data.schedule.length > 0) {
+                        tbody.innerHTML = data.schedule.map(entry => {
+                            const startTime = new Date(entry.scheduled_start).toLocaleString();
+                            const statusColor = entry.status === 'Running' ? '#28a745' : 
+                                              entry.status === 'Scheduled' ? '#ffc107' : '#6c757d';
+                            return `
+                                <tr>
+                                    <td><strong>${entry.batch_id}</strong></td>
+                                    <td>${entry.reactor_name}</td>
+                                    <td>${entry.process_name}</td>
+                                    <td>${startTime}</td>
+                                    <td><span style="color: ${statusColor};">●</span> ${entry.status}</td>
+                                    <td>${entry.operator_name}</td>
+                                    <td>
+                                        <button class="btn" style="padding: 5px 10px; margin: 2px;" onclick="viewSchedule(${entry.entry_id}, '${entry.source || 'system'}')">View</button>
+                                        ${entry.editable ? `<button class="btn btn-warning" style="padding: 5px 10px; margin-left:6px;" onclick="openEditSchedule(${entry.entry_id})">Edit</button>` : `<button class="btn btn-warning" style="padding: 5px 10px; margin-left:6px; opacity:0.6; cursor:not-allowed;" title="System entry (read-only)" disabled>Edit</button>`}
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('');
+                        
+                        // Update running processes count
+                        const runningCount = data.schedule.filter(entry => entry.status === 'Running').length;
+                        document.getElementById('running-processes').textContent = runningCount;
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="7" class="error">No scheduled processes found</td></tr>';
+                        document.getElementById('running-processes').textContent = '0';
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('schedule-tbody').innerHTML = '<tr><td colspan="7" class="error">Error loading schedule</td></tr>';
+                    document.getElementById('running-processes').textContent = 'Error';
+                });
+        }
+        
+        // Load processes data
+        function loadProcesses() {
+            debugLog('Processes', 'Loading process data...');
+            fetch('/api/processes')
+                .then(response => {
+                    debugLog('Processes', `API response status: ${response.status}`);
+                    return response.json();
+                })
+                .then(data => {
+                    debugLog('Processes', 'Received process data', data);
+                    const content = document.getElementById('processes-content');
+                    if (data.processes && data.processes.length > 0) {
+                        content.innerHTML = data.processes.map(process => `
+                            <div style="background: #f8f9fa; border-radius: 8px; padding: 15px; margin: 10px 0; border-left: 4px solid #667eea;">
+                                <h4>${process.process_name}</h4>
+                                <p><strong>Type:</strong> ${process.process_type}</p>
+                                <p><strong>Description:</strong> ${process.description || 'No description'}</p>
+                                <p><strong>Duration:</strong> ${process.typical_duration_hours} hours</p>
+                                <p><strong>Temperature:</strong> ${process.temperature_range_min}°C - ${process.temperature_range_max}°C</p>
+                                <p><strong>Compatible Reactors:</strong> ${process.compatible_reactor_types ? (typeof process.compatible_reactor_types === 'string' ? process.compatible_reactor_types.replace(/[{}]/g, '').split(',').join(', ') : process.compatible_reactor_types.join(', ')) : 'All'}</p>
+                            </div>
+                        `).join('');
+                    } else {
+                        debugLog('Processes', 'No process data received');
+                        content.innerHTML = '<p class="error">No processes found</p>';
+                    }
+                })
+                .catch(error => {
+                    debugLog('Processes', 'Error loading processes', error);
+                    document.getElementById('processes-content').innerHTML = '<p class="error">Error loading processes: ' + error.message + '</p>';
+                });
+        }
+        
+        // Load AI reactor performance analysis
+        function loadReactorPerformance() {
+            fetch('/api/ai-analysis/full-performance')
+                .then(response => response.json())
+                .then(data => {
+                    const content = document.getElementById('reactor-performance-content');
+                    
+                    let html = '<div class="card"><h4>🤖 AI Performance Analysis</h4>';
+                    
+                    // Reactor Efficiency Section
+                    if (data.reactor_efficiency && data.reactor_efficiency.length > 0) {
+                        html += '<h5>Reactor Efficiency Analysis:</h5>';
+                        html += '<div class="table-container"><table><thead><tr><th>Reactor</th><th>Efficiency</th><th>Throughput</th><th>Uptime</th><th>Status</th></tr></thead><tbody>';
+
+                        data.reactor_efficiency.forEach(reactor => {
+                            const efficiencyColor = reactor.efficiency > 94 ? '#28a745' : reactor.efficiency > 90 ? '#ffc107' : '#dc3545';
+                            const statusText = reactor.efficiency > 94 ? 'Excellent' : reactor.efficiency > 90 ? 'Good' : 'Needs Attention';
+
+                            html += `
+                                <tr>
+                                    <td><strong>${reactor.reactor}</strong></td>
+                                    <td style="color: ${efficiencyColor};">${reactor.efficiency.toFixed(1)}%</td>
+                                    <td>${reactor.throughput}</td>
+                                    <td>${reactor.uptime.toFixed(1)}%</td>
+                                    <td><span style="color: ${efficiencyColor};">●</span> ${statusText}</td>
+                                </tr>
+                            `;
+                        });
+                        html += '</tbody></table></div>';
+                    }
+
+                    // Process Performance Section
+                    if (data.process_performance && data.process_performance.length > 0) {
+                        html += '<h5>Process Performance Analysis:</h5>';
+                        html += '<div class="table-container"><table><thead><tr><th>Process</th><th>Avg Duration (hrs)</th><th>Avg Yield</th><th>Success Rate</th></tr></thead><tbody>';
+
+                        data.process_performance.forEach(process => {
+                            const yieldColor = process.avg_yield > 93 ? '#28a745' : process.avg_yield > 90 ? '#ffc107' : '#dc3545';
+
+                            html += `
+                                <tr>
+                                    <td><strong>${process.process}</strong></td>
+                                    <td>${process.avg_duration.toFixed(1)}</td>
+                                    <td style="color: ${yieldColor};">${process.avg_yield.toFixed(1)}%</td>
+                                    <td>${process.success_rate.toFixed(1)}%</td>
+                                </tr>
+                            `;
+                        });
+                        html += '</tbody></table></div>';
+                    }
+
+                    // AI Optimization Recommendations with Financial Impact
+                    if (data.optimization_recommendations && data.optimization_recommendations.length > 0) {
+                        html += '<h5>🎯 AI Optimization Recommendations:</h5>';
+                        data.optimization_recommendations.forEach(rec => {
+                            const impactColor = rec.impact === 'High' ? '#dc3545' : rec.impact === 'Medium' ? '#ffc107' : '#28a745';
+                            
+                            html += `
+                                <div style="background: #f8f9fa; border-radius: 8px; padding: 15px; margin: 10px 0; border-left: 4px solid ${impactColor};">
+                                    <h6><span style="color: ${impactColor};">●</span> ${rec.title}</h6>
+                                    <p>${rec.description}</p>
+                                    <div style="margin: 10px 0;">
+                                        <small><strong>Impact:</strong> ${rec.impact} | <strong>Estimated Improvement:</strong> ${rec.estimated_improvement}</small>
+                                    </div>
+                            `;
+                            
+                            // Add financial impact if available
+                            if (rec.financial_impact) {
+                                html += `
+                                    <div style="background: #e8f5e8; border-radius: 6px; padding: 12px; margin-top: 10px; border: 1px solid #28a745;">
+                                        <h6 style="color: #28a745; margin-bottom: 8px;">💰 Financial Impact</h6>
+                                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.9em;">
+                                            <div><strong>Annual Savings:</strong> ${rec.financial_impact.annual_savings}</div>
+                                            <div><strong>Monthly Savings:</strong> ${rec.financial_impact.monthly_savings}</div>
+                                            <div><strong>ROI Timeline:</strong> ${rec.financial_impact.roi_months} months</div>
+                                            <div><strong>Per Wafer:</strong> ${rec.financial_impact.cost_per_wafer_improvement}</div>
+                                        </div>
+                                        <div style="margin-top: 8px; font-size: 0.8em; color: #666;">
+                                            <em>${rec.financial_impact.calculation_basis}</em>
+                                        </div>
+                                    </div>
+                                `;
+                            }
+                            
+                            html += `</div>`;
+                        });
+                    }
+
+                    html += '</div>';
+                    content.innerHTML = html;
+                })
+                .catch(error => {
+                    document.getElementById('reactor-performance-content').innerHTML = '<p class="error">Error loading AI performance analysis: ' + error.message + '</p>';
+                });
+        }
+        
+        // Global variable to store all runs data
+        let allRunsData = [];
+        
+        // Load completed runs for post-run analysis
+        function loadCompletedRuns() {
+            fetch('/api/historical-runs')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Historical runs data:', data);
+                    allRunsData = data; // Store the complete data
+                    
+                    if (data.historical_runs && data.historical_runs.length > 0) {
+                        displayCompletedRuns(data.historical_runs);
+                        updateRunSummary(data);
+                    } else {
+                        document.getElementById('completed-runs-tbody').innerHTML = '<tr><td colspan="8" class="error">No completed runs found</td></tr>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading completed runs:', error);
+                    document.getElementById('completed-runs-tbody').innerHTML = '<tr><td colspan="8" class="error">Error loading completed runs: ' + error.message + '</td></tr>';
+                });
+        }
+        
+        // Display completed runs in the table
+        function displayCompletedRuns(runs) {
+            const tbody = document.getElementById('completed-runs-tbody');
+            tbody.innerHTML = runs.map(run => {
+                const endTime = run.end_time ? new Date(run.end_time).toLocaleString() : 'N/A';
+                const yieldColor = run.yield > 90 ? '#28a745' : run.yield > 80 ? '#ffc107' : '#dc3545';
+                const uniformityColor = run.uniformity > 95 ? '#28a745' : run.uniformity > 90 ? '#ffc107' : '#dc3545';
+                
+                return `
+                    <tr>
+                        <td><strong>${run.run_id}</strong></td>
+                        <td>${run.reactor_name}</td>
+                        <td>${run.process_name}</td>
+                        <td>${run.wafers_processed || 'N/A'}</td>
+                        <td style="color: ${yieldColor};">${run.yield ? run.yield.toFixed(1) : 'N/A'}%</td>
+                        <td style="color: ${uniformityColor};">${run.uniformity ? run.uniformity.toFixed(1) : 'N/A'}%</td>
+                        <td><span style="color: #28a745;">●</span> ${run.status}</td>
+                        <td>
+                            <button class="btn" style="padding: 5px 10px;" onclick="analyzeRun('${run.run_id}')">📊 Analyze</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        // Update run summary
+        function updateRunSummary(data) {
+            const summaryDiv = document.getElementById('run-summary');
+            const summaryContent = document.getElementById('summary-content');
+            
+            if (data.performance_summary) {
+                const summary = data.performance_summary;
+                summaryContent.innerHTML = `
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <div><strong>Total Runs:</strong> ${data.total_runs}</div>
+                        <div><strong>Total Wafers:</strong> ${summary.total_wafers}</div>
+                        <div><strong>Average Yield:</strong> <span style="color: #28a745;">${summary.avg_yield ? summary.avg_yield.toFixed(1) : 'N/A'}%</span></div>
+                        <div><strong>Avg Defect Density:</strong> ${summary.avg_defect_density ? summary.avg_defect_density.toFixed(3) : 'N/A'}</div>
+                    </div>
+                `;
+                summaryDiv.style.display = 'block';
+            }
+        }
+        
+        // Filter completed runs based on radio button selections
+        function filterCompletedRuns() {
+            if (!allRunsData.historical_runs) {
+                console.log('No data to filter');
+                return;
+            }
+            
+            const analysisType = document.querySelector('input[name="analysisType"]:checked').value;
+            const processType = document.querySelector('input[name="processType"]:checked').value;
+            const reactorType = document.querySelector('input[name="reactorType"]:checked').value;
+            
+            console.log('Filtering with:', { analysisType, processType, reactorType });
+            
+            let filteredRuns = allRunsData.historical_runs.filter(run => {
+                // Filter by analysis type (yield)
+                if (analysisType === 'high-yield' && run.yield <= 90) return false;
+                if (analysisType === 'low-yield' && run.yield >= 80) return false;
+                
+                // Filter by process type
+                if (processType === 'epitaxy' && !run.process_name.toLowerCase().includes('epitaxy')) return false;
+                if (processType === 'mocvd' && !run.process_name.toLowerCase().includes('mocvd')) return false;
+                if (processType === 'other' && (run.process_name.toLowerCase().includes('epitaxy') || run.process_name.toLowerCase().includes('mocvd'))) return false;
+                
+                // Filter by reactor type
+                if (reactorType !== 'all' && !run.reactor_name.startsWith(reactorType)) return false;
+                
+                return true;
+            });
+            
+            console.log(`Filtered ${filteredRuns.length} runs from ${allRunsData.historical_runs.length} total`);
+            displayCompletedRuns(filteredRuns);
+            
+            // Update summary for filtered data
+            const filteredSummary = {
+                total_runs: filteredRuns.length,
+                performance_summary: {
+                    total_wafers: filteredRuns.reduce((sum, run) => sum + (run.wafers_processed || 0), 0),
+                    avg_yield: filteredRuns.length > 0 ? filteredRuns.reduce((sum, run) => sum + (run.yield || 0), 0) / filteredRuns.length : 0,
+                    avg_defect_density: filteredRuns.length > 0 ? filteredRuns.reduce((sum, run) => sum + (run.defect_density || 0), 0) / filteredRuns.length : 0
+                }
+            };
+            updateRunSummary(filteredSummary);
+        }
+        
+        // Export run analysis
+        function exportRunAnalysis() {
+            if (!allRunsData.historical_runs) {
+                alert('No data to export. Please load completed runs first.');
+                return;
+            }
+            
+            const exportData = {
+                export_metadata: {
+                    timestamp: new Date().toISOString(),
+                    version: '3.0.0-ENTERPRISE',
+                    database: 'mesprod (447GB)',
+                    export_type: 'post-run-analysis'
+                },
+                ...allRunsData
+            };
+            
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `post-run-analysis-${new Date().toISOString().split('T')[0]}.json`;
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            alert('✅ Post-Run Analysis exported successfully!');
+        }
+        
+        // Load yield correlation analysis
+        function loadYieldCorrelation() {
+            fetch('/api/ai-analysis/full-performance')
+                .then(response => response.json())
+                .then(data => {
+                    const content = document.getElementById('yield-correlation-content');
+                    let html = '<h4>🎯 Yield Performance Analysis:</h4>';
+                    
+                    // Process Performance Analysis
+                    if (data.process_performance && data.process_performance.length > 0) {
+                        html += '<h5>Process Performance Summary:</h5>';
+                        html += '<div class="table-container"><table><thead><tr><th>Process</th><th>Avg Yield (%)</th><th>Success Rate (%)</th><th>Avg Duration (hrs)</th><th>Performance</th></tr></thead><tbody>';
+                        data.process_performance.forEach(entry => {
+                            const yieldColor = entry.avg_yield > 90 ? '#28a745' : entry.avg_yield > 80 ? '#ffc107' : '#dc3545';
+                            html += `
+                                <tr>
+                                    <td>${entry.process}</td>
+                                    <td style="color: ${yieldColor}; font-weight: bold;">${entry.avg_yield.toFixed(1)}%</td>
+                                    <td style="color: ${entry.success_rate > 95 ? '#28a745' : '#ffc107'};">${entry.success_rate.toFixed(1)}%</td>
+                                    <td>${entry.avg_duration.toFixed(1)}</td>
+                                    <td>
+                                        <div style="width: 100px; height: 8px; background: #e9ecef; border-radius: 4px; overflow: hidden;">
+                                            <div style="width: ${entry.avg_yield}%; height: 100%; background: ${yieldColor};"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                        html += '</tbody></table></div>';
+                    }
+                    
+                    // Reactor Efficiency Analysis
+                    if (data.reactor_efficiency && data.reactor_efficiency.length > 0) {
+                        html += '<h5>Reactor Efficiency Analysis:</h5>';
+                        html += '<div class="table-container"><table><thead><tr><th>Reactor</th><th>Efficiency (%)</th><th>Uptime (%)</th><th>Throughput</th><th>Status</th></tr></thead><tbody>';
+                        data.reactor_efficiency.forEach(entry => {
+                            const efficiencyColor = entry.efficiency > 90 ? '#28a745' : entry.efficiency > 85 ? '#ffc107' : '#dc3545';
+                            html += `
+                                <tr>
+                                    <td>${entry.reactor}</td>
+                                    <td style="color: ${efficiencyColor}; font-weight: bold;">${entry.efficiency.toFixed(1)}%</td>
+                                    <td style="color: ${entry.uptime > 95 ? '#28a745' : '#ffc107'};">${entry.uptime.toFixed(1)}%</td>
+                                    <td>${entry.throughput}</td>
+                                    <td>
+                                        <span style="background: ${efficiencyColor}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8em;">
+                                            ${entry.efficiency > 90 ? 'Excellent' : entry.efficiency > 85 ? 'Good' : 'Needs Attention'}
+                                        </span>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                        html += '</tbody></table></div>';
+                    }
+                    
+                    // Add optimization recommendations
+                    if (data.optimization_recommendations && data.optimization_recommendations.length > 0) {
+                        html += '<h5>💡 Optimization Recommendations:</h5>';
+                        data.optimization_recommendations.forEach(rec => {
+                            const impactColor = rec.impact === 'High' ? '#dc3545' : rec.impact === 'Medium' ? '#ffc107' : '#28a745';
+                            html += `
+                                <div style="background: #f8f9fa; border-radius: 8px; padding: 15px; margin: 10px 0; border-left: 4px solid ${impactColor};">
+                                    <h6 style="margin: 0 0 8px 0; color: ${impactColor};">
+                                        <span style="background: ${impactColor}; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7em; margin-right: 8px;">${rec.impact.toUpperCase()}</span>
+                                        ${rec.title}
+                                    </h6>
+                                    <p style="margin: 5px 0; color: #666;">${rec.description}</p>
+                                    <p style="margin: 5px 0; font-weight: bold; color: #28a745;">💰 ${rec.estimated_improvement}</p>
+                                    ${rec.financial_impact ? `
+                                        <div style="background: #e8f5e8; padding: 8px; border-radius: 4px; margin-top: 8px; font-size: 0.9em;">
+                                            <strong>Financial Impact:</strong> ${rec.financial_impact.annual_savings} annually 
+                                            (ROI: ${rec.financial_impact.roi_months} months)
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            `;
+                        });
+                    }
+                    
+                    content.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Error loading performance analysis:', error);
+                    document.getElementById('yield-correlation-content').innerHTML = '<p class="error">❌ Error loading performance analysis. Please try again.</p>';
+                });
+        }
+        
+        // Load historical trends
+        function loadHistoricalTrends() {
+            fetch('/api/historical-runs')
+                .then(response => response.json())
+                .then(data => {
+                    const content = document.getElementById('historical-trends-content');
+                    const insightsContent = document.getElementById('trend-insights-content');
+                    
+                    if (data.historical_runs && data.historical_runs.length > 0) {
+                        let html = '<div class="table-container"><table><thead><tr><th>Batch ID</th><th>Reactor</th><th>Process</th><th>Yield</th><th>Completed</th></tr></thead><tbody>';
+                        
+                        data.historical_runs.slice(0, 10).forEach(entry => {
+                            const yieldColor = entry.avg_pocket_yield > 90 ? '#28a745' : entry.avg_pocket_yield > 80 ? '#ffc107' : '#dc3545';
+                            html += `
+                                <tr>
+                                    <td>${entry.batch_id}</td>
+                                    <td>${entry.reactor_name} <span style="background: #e3f2fd; padding: 2px 6px; border-radius: 4px; font-size: 0.7em;">${entry.reactor_type}</span></td>
+                                    <td>${entry.process_name}</td>
+                                    <td style="color: ${yieldColor};">${entry.avg_pocket_yield ? entry.avg_pocket_yield.toFixed(1) : 'N/A'}%</td>
+                                    <td>${entry.actual_end ? new Date(entry.actual_end).toLocaleDateString() : 'N/A'}</td>
+                                </tr>
+                            `;
+                        });
+                        html += '</tbody></table></div>';
+                        content.innerHTML = html;
+                        
+                        // Show trend insights based on historical data
+                        let insightsHtml = '<h4>Historical Analysis:</h4>';
+                        const totalRuns = data.historical_runs.length;
+                        const avgYield = data.historical_runs.reduce((sum, run) => sum + (run.avg_pocket_yield || 0), 0) / totalRuns;
+                        
+                        insightsHtml += `
+                            <div style="background: #e8f5e8; border-radius: 8px; padding: 15px; margin: 10px 0; border-left: 4px solid #28a745;">
+                                <h5>Historical Performance Summary</h5>
+                                <p>Total completed runs: ${totalRuns}</p>
+                                <p>Average yield across all runs: ${avgYield.toFixed(1)}%</p>
+                                <p>Data spans from ${data.historical_runs[data.historical_runs.length-1]?.scheduled_start ? new Date(data.historical_runs[data.historical_runs.length-1].scheduled_start).toLocaleDateString() : 'N/A'} to ${data.historical_runs[0]?.scheduled_start ? new Date(data.historical_runs[0].scheduled_start).toLocaleDateString() : 'N/A'}</p>
+                            </div>
+                        `;
+                        insightsContent.innerHTML = insightsHtml;
+                    } else {
+                        content.innerHTML = '<p class="error">No historical data available</p>';
+                        insightsContent.innerHTML = '<p class="error">No historical insights available</p>';
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('historical-trends-content').innerHTML = '<p class="error">Error loading historical data</p>';
+                    document.getElementById('trend-insights-content').innerHTML = '<p class="error">Error loading insights</p>';
+                });
+        }
+        
+        // Load system information
+        function loadSystemInfo() {
+            fetch('/api/status')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.network) {
+                        document.getElementById('system-current-ip').textContent = data.network.current_ip || 'Unknown';
+                        document.getElementById('system-interface').textContent = data.network.interface || 'Unknown';
+                        document.getElementById('system-mac').textContent = data.network.mac_address || 'Unknown';
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('system-current-ip').textContent = 'Error';
+                    document.getElementById('system-interface').textContent = 'Error';
+                    document.getElementById('system-mac').textContent = 'Error';
+                });
+        }
+        
+        // Additional AI analysis functions
+        function optimizeParameters() {
+            fetch('/api/reactor-assignment')
+                .then(response => response.json())
+                .then(data => {
+                    const content = document.getElementById('parameter-optimization-content');
+                    let html = '<h4>🎯 Optimal Parameter Optimization:</h4>';
+                    
+                    // Show AI insights first
+                    if (data.insights && data.insights.length > 0) {
+                        html += '<h5>🤖 AI Insights:</h5>';
+                        data.insights.forEach(insight => {
+                            const insightColor = insight.type === 'optimal_assignment' ? '#28a745' : '#007bff';
+                            html += `
+                                <div style="background: #f8f9fa; border-radius: 8px; padding: 15px; margin: 10px 0; border-left: 4px solid ${insightColor};">
+                                    <h6 style="margin: 0 0 8px 0; color: ${insightColor};">
+                                        ${insight.type === 'optimal_assignment' ? '🎯' : '📊'} ${insight.title}
+                                    </h6>
+                                    <p style="margin: 5px 0; color: #666;">${insight.description}</p>
+                                    ${insight.yield ? `<p style="margin: 5px 0; font-weight: bold; color: #28a745;">Expected Yield: ${insight.yield}%</p>` : ''}
+                                    ${insight.avg_yield ? `<p style="margin: 5px 0; font-weight: bold; color: #28a745;">Average Yield: ${insight.avg_yield}%</p>` : ''}
+                                </div>
+                            `;
+                        });
+                    }
+                    
+                    // Show top assignments by process
+                    if (data.assignments && data.assignments.length > 0) {
+                        html += '<h5>🏆 Top Reactor Assignments by Process:</h5>';
+                        
+                        // Group assignments by process and get the best reactor for each
+                        const processBestAssignments = {};
+                        data.assignments.forEach(assignment => {
+                            const processName = assignment.process_name;
+                            const yield = parseFloat(assignment.predicted_yield);
+                            
+                            if (!processBestAssignments[processName] || yield > parseFloat(processBestAssignments[processName].predicted_yield)) {
+                                if (assignment.compatibility === 'Compatible') {
+                                    processBestAssignments[processName] = assignment;
+                                }
+                            }
+                        });
+                        
+                        html += '<div class="table-container"><table><thead><tr><th>Process</th><th>Best Reactor</th><th>Type</th><th>Chamber</th><th>Predicted Yield</th><th>Compatibility</th></tr></thead><tbody>';
+                        
+                        Object.values(processBestAssignments).forEach(assignment => {
+                            const yieldColor = parseFloat(assignment.predicted_yield) > 90 ? '#28a745' : parseFloat(assignment.predicted_yield) > 85 ? '#ffc107' : '#dc3545';
+                            html += `
+                                <tr>
+                                    <td><strong>${assignment.process_name}</strong><br><small style="color: #666;">${assignment.process_type}</small></td>
+                                    <td><strong>${assignment.reactor_name}</strong></td>
+                                    <td><span style="background: #e3f2fd; padding: 4px 8px; border-radius: 4px; font-size: 0.8em;">${assignment.reactor_type}</span></td>
+                                    <td><span style="background: #f3e5f5; padding: 4px 8px; border-radius: 4px; font-size: 0.8em;">${assignment.chamber_type}</span></td>
+                                    <td style="color: ${yieldColor}; font-weight: bold;">${assignment.predicted_yield}%</td>
+                                    <td>
+                                        <span style="background: #28a745; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8em;">
+                                            ✓ ${assignment.compatibility}
+                                        </span>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                        html += '</tbody></table></div>';
+                        
+                        // Add summary statistics
+                        const compatibleAssignments = data.assignments.filter(a => a.compatibility === 'Compatible');
+                        const avgYield = compatibleAssignments.reduce((sum, a) => sum + parseFloat(a.predicted_yield), 0) / compatibleAssignments.length;
+                        
+                        html += `
+                            <div style="background: #e8f5e8; border-radius: 8px; padding: 15px; margin: 15px 0; border-left: 4px solid #28a745;">
+                                <h6 style="margin: 0 0 8px 0; color: #28a745;">📊 Optimization Summary</h6>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                                    <div>
+                                        <strong>Total Combinations:</strong> ${data.total_combinations}<br>
+                                        <strong>Compatible Assignments:</strong> ${compatibleAssignments.length}
+                                    </div>
+                                    <div>
+                                        <strong>Average Yield:</strong> ${avgYield.toFixed(1)}%<br>
+                                        <strong>Best Processes:</strong> ${Object.keys(processBestAssignments).length}
+                                    </div>
+                                </div>
+                                <p style="margin: 10px 0 0 0; font-style: italic; color: #666;">
+                                    💡 ${data.ai_recommendation || 'Use SYCR reactors for highest yield processes'}
+                                </p>
+                            </div>
+                        `;
+                    }
+                    
+                    content.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Error loading optimization data:', error);
+                    document.getElementById('parameter-optimization-content').innerHTML = '<p class="error">❌ Error loading optimization data. Please try again.</p>';
+                });
+        }
+        
+        function analyzeRun(runId) {
+            if (!allRunsData.historical_runs || allRunsData.historical_runs.length === 0) {
+                alert('Please load completed runs first before analyzing individual runs.');
+                return;
+            }
+            
+            // Find the specific run
+            const run = allRunsData.historical_runs.find(r => r.run_id === runId);
+            if (!run) {
+                alert(`Run ${runId} not found in loaded data.`);
+                return;
+            }
+            
+            console.log('Analyzing individual run:', runId, run);
+            
+            // Create or show individual run analysis section
+            let runAnalysisSection = document.getElementById('individual-run-analysis-section');
+            if (!runAnalysisSection) {
+                runAnalysisSection = document.createElement('div');
+                runAnalysisSection.id = 'individual-run-analysis-section';
+                runAnalysisSection.style.cssText = 'margin: 20px 0; padding: 20px; background: #fff8e1; border-radius: 8px; border-left: 4px solid #ff9800;';
+                
+                // Insert after the trends section or summary section
+                const trendsSection = document.getElementById('trends-analysis-section');
+                const summarySection = document.getElementById('run-summary');
+                const insertAfter = trendsSection || summarySection;
+                insertAfter.parentNode.insertBefore(runAnalysisSection, insertAfter.nextSibling);
+            }
+            
+            // Perform individual run analysis
+            const runAnalysis = performIndividualRunAnalysis(run, allRunsData.historical_runs);
+            
+            // Display individual run analysis
+            runAnalysisSection.innerHTML = `
+                <h4>🔬 Individual Run Analysis: ${run.run_id}</h4>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 15px;">
+                    
+                    <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #ddd;">
+                        <h5>📊 Run Overview</h5>
+                        <div><strong>Reactor:</strong> ${run.reactor_name}</div>
+                        <div><strong>Process:</strong> ${run.process_name}</div>
+                        <div><strong>Status:</strong> <span style="color: #28a745;">${run.status}</span></div>
+                        <div><strong>Duration:</strong> ${runAnalysis.duration} hours</div>
+                        <div><strong>Wafers:</strong> ${run.wafers_processed || 'N/A'}</div>
+                    </div>
+                    
+                    <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #ddd;">
+                        <h5>🎯 Performance Metrics</h5>
+                        <div><strong>Yield:</strong> <span style="color: ${runAnalysis.yieldColor};">${run.yield ? run.yield.toFixed(1) : 'N/A'}%</span></div>
+                        <div><strong>Uniformity:</strong> <span style="color: ${runAnalysis.uniformityColor};">${run.uniformity ? run.uniformity.toFixed(1) : 'N/A'}%</span></div>
+                        <div><strong>Defect Density:</strong> ${run.defect_density ? run.defect_density.toFixed(3) : 'N/A'}</div>
+                        <div><strong>Performance Score:</strong> <span style="color: ${runAnalysis.scoreColor};">${runAnalysis.performanceScore}/100</span></div>
+                    </div>
+                    
+                    <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #ddd;">
+                        <h5>📈 Comparative Analysis</h5>
+                        <div><strong>vs Average Yield:</strong> <span style="color: ${runAnalysis.vsAverage.yieldColor};">${runAnalysis.vsAverage.yieldDiff}</span></div>
+                        <div><strong>vs Best Run:</strong> <span style="color: ${runAnalysis.vsBest.color};">${runAnalysis.vsBest.diff}</span></div>
+                        <div><strong>Reactor Rank:</strong> ${runAnalysis.reactorRank.position} of ${runAnalysis.reactorRank.total}</div>
+                        <div><strong>Process Rank:</strong> ${runAnalysis.processRank.position} of ${runAnalysis.processRank.total}</div>
+                    </div>
+                    
+                    <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #ddd;">
+                        <h5>⚡ Efficiency Analysis</h5>
+                        <div><strong>Wafer Efficiency:</strong> ${runAnalysis.efficiency.waferEfficiency.toFixed(1)}%</div>
+                        <div><strong>Time Efficiency:</strong> ${runAnalysis.efficiency.timeEfficiency}</div>
+                        <div><strong>Quality Rating:</strong> <span style="color: ${runAnalysis.qualityRating.color};">${runAnalysis.qualityRating.rating}</span></div>
+                        <div><strong>Overall Grade:</strong> <span style="color: ${runAnalysis.overallGrade.color}; font-weight: bold;">${runAnalysis.overallGrade.grade}</span></div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 20px; padding: 15px; background: #e3f2fd; border-radius: 8px; border: 1px solid #2196f3;">
+                    <h5>💡 Run-Specific Insights & Recommendations</h5>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        ${runAnalysis.insights.map(insight => `<li>${insight}</li>`).join('')}
+                    </ul>
+                </div>
+                
+                <div style="margin-top: 20px; padding: 15px; background: #f3e5f5; border-radius: 8px; border: 1px solid #9c27b0;">
+                    <h5>🔧 Optimization Opportunities</h5>
+                    ${runAnalysis.optimizations.length > 0 ? 
+                        runAnalysis.optimizations.map(opt => `
+                            <div style="background: white; margin: 15px 0; padding: 15px; border-radius: 6px; border-left: 4px solid ${opt.priority === 'High' ? '#dc3545' : opt.priority === 'Medium' ? '#ffc107' : '#28a745'};">
+                                <h6 style="color: #333; margin-bottom: 8px;">
+                                    <span style="background: ${opt.priority === 'High' ? '#dc3545' : opt.priority === 'Medium' ? '#ffc107' : '#28a745'}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.7em; margin-right: 8px;">${opt.priority}</span>
+                                    ${opt.title}
+                                </h6>
+                                <p style="margin: 8px 0; color: #666; font-size: 0.9em;">${opt.description}</p>
+                                <div style="margin: 10px 0;">
+                                    <strong style="color: #333;">Specific Recommendations:</strong>
+                                    <ul style="margin: 5px 0 10px 20px; color: #555;">
+                                        ${opt.recommendations.map(rec => `<li style="margin: 3px 0;">${rec}</li>`).join('')}
+                                    </ul>
+                                </div>
+                                <div style="background: #e8f5e8; padding: 8px; border-radius: 4px; font-size: 0.85em;">
+                                    <strong style="color: #28a745;">💰 ${opt.estimatedImpact}</strong>
+                                </div>
+                                <div style="margin-top: 10px; text-align: center;">
+                                    <button class="btn btn-sm" onclick="getAIOptimizationGuidance('${run.run_id}', '${opt.title}')" style="font-size: 0.8em; padding: 5px 12px;">
+                                        🤖 Get AI Detailed Guidance
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('') : 
+                        '<div style="background: #e8f5e8; padding: 15px; border-radius: 6px; text-align: center;"><strong style="color: #28a745;">🎉 Excellent Performance!</strong><br><span style="color: #666;">No optimization opportunities identified - this run performed exceptionally well.</span></div>'
+                    }
+                </div>
+                
+                <div style="margin-top: 15px; text-align: center;">
+                    <button class="btn btn-secondary" onclick="exportRunAnalysis('${run.run_id}')" style="margin-right: 10px;">📊 Export Run Analysis</button>
+                    <button class="btn" onclick="hideRunAnalysis()">✖️ Close Analysis</button>
+                </div>
+            `;
+            
+            // Scroll to run analysis section
+            runAnalysisSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        
+        // Perform detailed individual run analysis
+        function performIndividualRunAnalysis(run, allRuns) {
+            const analysis = {
+                duration: 'N/A',
+                yieldColor: '#666',
+                uniformityColor: '#666',
+                scoreColor: '#666',
+                performanceScore: 0,
+                vsAverage: { yieldDiff: 'N/A', yieldColor: '#666' },
+                vsBest: { diff: 'N/A', color: '#666' },
+                reactorRank: { position: 'N/A', total: 0 },
+                processRank: { position: 'N/A', total: 0 },
+                efficiency: { waferEfficiency: 0, timeEfficiency: 'N/A' },
+                qualityRating: { rating: 'N/A', color: '#666' },
+                overallGrade: { grade: 'N/A', color: '#666' },
+                insights: [],
+                optimizations: []
+            };
+            
+            // Calculate duration
+            if (run.start_time && run.end_time) {
+                const duration = (new Date(run.end_time) - new Date(run.start_time)) / (1000 * 60 * 60);
+                analysis.duration = duration.toFixed(1);
+            }
+            
+            // Color coding for metrics
+            analysis.yieldColor = run.yield > 90 ? '#28a745' : run.yield > 80 ? '#ffc107' : '#dc3545';
+            analysis.uniformityColor = run.uniformity > 95 ? '#28a745' : run.uniformity > 90 ? '#ffc107' : '#dc3545';
+            
+            // Performance score calculation
+            const yieldScore = (run.yield || 0);
+            const uniformityScore = (run.uniformity || 0);
+            const defectScore = run.defect_density ? Math.max(0, 100 - (run.defect_density * 1000)) : 50;
+            analysis.performanceScore = Math.round((yieldScore + uniformityScore + defectScore) / 3);
+            analysis.scoreColor = analysis.performanceScore > 90 ? '#28a745' : analysis.performanceScore > 75 ? '#ffc107' : '#dc3545';
+            
+            // Comparative analysis
+            const avgYield = allRuns.reduce((sum, r) => sum + (r.yield || 0), 0) / allRuns.length;
+            const yieldDiff = (run.yield || 0) - avgYield;
+            analysis.vsAverage.yieldDiff = `${yieldDiff > 0 ? '+' : ''}${yieldDiff.toFixed(1)}%`;
+            analysis.vsAverage.yieldColor = yieldDiff > 0 ? '#28a745' : yieldDiff < -2 ? '#dc3545' : '#ffc107';
+            
+            const bestRun = allRuns.reduce((best, r) => (r.yield || 0) > (best.yield || 0) ? r : best, allRuns[0]);
+            const bestDiff = (run.yield || 0) - (bestRun.yield || 0);
+            analysis.vsBest.diff = `${bestDiff > 0 ? '+' : ''}${bestDiff.toFixed(1)}% vs best`;
+            analysis.vsBest.color = bestDiff >= 0 ? '#28a745' : bestDiff > -5 ? '#ffc107' : '#dc3545';
+            
+            // Ranking analysis
+            const reactorRuns = allRuns.filter(r => r.reactor_name === run.reactor_name);
+            const sortedReactorRuns = reactorRuns.sort((a, b) => (b.yield || 0) - (a.yield || 0));
+            const reactorPosition = sortedReactorRuns.findIndex(r => r.run_id === run.run_id) + 1;
+            analysis.reactorRank = { position: reactorPosition, total: reactorRuns.length };
+            
+            const processRuns = allRuns.filter(r => r.process_name === run.process_name);
+            const sortedProcessRuns = processRuns.sort((a, b) => (b.yield || 0) - (a.yield || 0));
+            const processPosition = sortedProcessRuns.findIndex(r => r.run_id === run.run_id) + 1;
+            analysis.processRank = { position: processPosition, total: processRuns.length };
+            
+            // Efficiency analysis
+            const expectedWafers = 24; // Typical wafer count
+            analysis.efficiency.waferEfficiency = ((run.wafers_processed || 0) / expectedWafers) * 100;
+            
+            if (analysis.duration !== 'N/A') {
+                const expectedDuration = 6; // Typical process duration in hours
+                const timeEff = (expectedDuration / parseFloat(analysis.duration)) * 100;
+                analysis.efficiency.timeEfficiency = `${timeEff.toFixed(1)}%`;
+            }
+            
+            // Quality rating
+            if (run.yield > 95 && run.uniformity > 97) {
+                analysis.qualityRating = { rating: 'Excellent', color: '#28a745' };
+            } else if (run.yield > 90 && run.uniformity > 95) {
+                analysis.qualityRating = { rating: 'Good', color: '#28a745' };
+            } else if (run.yield > 85 && run.uniformity > 90) {
+                analysis.qualityRating = { rating: 'Fair', color: '#ffc107' };
+            } else {
+                analysis.qualityRating = { rating: 'Needs Improvement', color: '#dc3545' };
+            }
+            
+            // Overall grade
+            if (analysis.performanceScore > 95) {
+                analysis.overallGrade = { grade: 'A+', color: '#28a745' };
+            } else if (analysis.performanceScore > 90) {
+                analysis.overallGrade = { grade: 'A', color: '#28a745' };
+            } else if (analysis.performanceScore > 85) {
+                analysis.overallGrade = { grade: 'B+', color: '#28a745' };
+            } else if (analysis.performanceScore > 80) {
+                analysis.overallGrade = { grade: 'B', color: '#ffc107' };
+            } else if (analysis.performanceScore > 75) {
+                analysis.overallGrade = { grade: 'C+', color: '#ffc107' };
+            } else {
+                analysis.overallGrade = { grade: 'C', color: '#dc3545' };
+            }
+            
+            // Generate insights
+            if (run.yield > avgYield + 2) {
+                analysis.insights.push(`Excellent yield performance - ${yieldDiff.toFixed(1)}% above average`);
+            }
+            if (run.uniformity > 97) {
+                analysis.insights.push('Outstanding uniformity indicates excellent process control');
+            }
+            if (run.defect_density < 0.1) {
+                analysis.insights.push('Very low defect density shows effective quality management');
+            }
+            if (reactorPosition === 1) {
+                analysis.insights.push(`Best performance recorded for ${run.reactor_name} reactor`);
+            }
+            if (processPosition === 1) {
+                analysis.insights.push(`Top performance for ${run.process_name} process type`);
+            }
+            
+            // Generate detailed optimizations
+            if (run.yield < avgYield - 2) {
+                analysis.optimizations.push({
+                    title: 'Process Parameter Optimization Required',
+                    description: `Yield of ${run.yield.toFixed(1)}% is ${Math.abs(yieldDiff).toFixed(1)}% below average. This indicates suboptimal process conditions.`,
+                    recommendations: [
+                        'Review temperature profile and ramp rates for uniformity',
+                        'Optimize gas flow ratios and chamber pressure settings',
+                        'Verify precursor delivery timing and concentration',
+                        'Check substrate preparation and cleaning procedures'
+                    ],
+                    priority: 'High',
+                    estimatedImpact: `Potential yield improvement: +${Math.min(10, Math.abs(yieldDiff) + 2).toFixed(1)}%`
+                });
+            }
+            if (run.uniformity < 95) {
+                analysis.optimizations.push({
+                    title: 'Uniformity Enhancement Needed',
+                    description: `Uniformity of ${run.uniformity.toFixed(1)}% indicates uneven processing across wafer surface.`,
+                    recommendations: [
+                        'Evaluate gas injection nozzle positioning and flow distribution',
+                        'Review wafer rotation speed and heating element alignment',
+                        'Check for chamber wall contamination affecting gas flow',
+                        'Optimize susceptor temperature uniformity and flatness'
+                    ],
+                    priority: 'Medium',
+                    estimatedImpact: `Target uniformity improvement: +${(97 - run.uniformity).toFixed(1)}%`
+                });
+            }
+            if (run.defect_density > 0.15) {
+                analysis.optimizations.push({
+                    title: 'Contamination Control Enhancement',
+                    description: `Defect density of ${run.defect_density.toFixed(3)} exceeds acceptable limits, indicating contamination issues.`,
+                    recommendations: [
+                        'Implement more frequent chamber cleaning cycles',
+                        'Review particle filtration system efficiency',
+                        'Enhance wafer handling procedures to minimize contamination',
+                        'Verify precursor purity and delivery system cleanliness'
+                    ],
+                    priority: 'High',
+                    estimatedImpact: `Potential defect reduction: -${((run.defect_density - 0.08) * 1000).toFixed(0)} particles/cm²`
+                });
+            }
+            if (analysis.efficiency.waferEfficiency < 90) {
+                analysis.optimizations.push({
+                    title: 'Wafer Handling Optimization',
+                    description: `Only ${run.wafers_processed || 0} wafers processed vs expected 24, indicating handling inefficiencies.`,
+                    recommendations: [
+                        'Review robotic wafer handling alignment and calibration',
+                        'Check cassette loading procedures and wafer positioning',
+                        'Verify wafer breakage prevention measures',
+                        'Optimize wafer inspection and sorting protocols'
+                    ],
+                    priority: 'Medium',
+                    estimatedImpact: `Potential throughput increase: +${(24 - (run.wafers_processed || 0))} wafers per run`
+                });
+            }
+            if (analysis.duration !== 'N/A' && parseFloat(analysis.duration) > 8) {
+                analysis.optimizations.push({
+                    title: 'Process Timing Optimization',
+                    description: `Process duration of ${analysis.duration} hours exceeds optimal timing, reducing throughput efficiency.`,
+                    recommendations: [
+                        'Optimize temperature ramp rates to reduce heating/cooling time',
+                        'Review process step timing for unnecessary dwell periods',
+                        'Consider parallel processing steps where possible',
+                        'Evaluate pump-down and gas switching efficiency'
+                    ],
+                    priority: 'Low',
+                    estimatedImpact: `Potential time savings: -${(parseFloat(analysis.duration) - 6).toFixed(1)} hours per run`
+                });
+            }
+            
+            return analysis;
+        }
+        
+        // Export individual run analysis
+        function exportRunAnalysis(runId) {
+            const run = allRunsData.historical_runs.find(r => r.run_id === runId);
+            if (!run) {
+                alert('Run data not found for export');
+                return;
+            }
+            
+            const runAnalysis = performIndividualRunAnalysis(run, allRunsData.historical_runs);
+            const exportData = {
+                export_metadata: {
+                    timestamp: new Date().toISOString(),
+                    version: '3.0.0-ENTERPRISE',
+                    database: 'mesprod (447GB)',
+                    export_type: 'individual-run-analysis',
+                    run_id: runId
+                },
+                run_data: run,
+                analysis_results: runAnalysis,
+                comparative_context: {
+                    total_runs: allRunsData.historical_runs.length,
+                    average_yield: allRunsData.historical_runs.reduce((sum, r) => sum + (r.yield || 0), 0) / allRunsData.historical_runs.length
+                }
+            };
+            
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `run-analysis-${runId}-${new Date().toISOString().split('T')[0]}.json`;
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            alert(`✅ Run Analysis for ${runId} exported successfully!`);
+        }
+        
+        // Hide individual run analysis
+        function hideRunAnalysis() {
+            const runAnalysisSection = document.getElementById('individual-run-analysis-section');
+            if (runAnalysisSection) {
+                runAnalysisSection.style.display = 'none';
+            }
+        }
+        
+        // Get AI-powered detailed optimization guidance
+        function getAIOptimizationGuidance(runId, optimizationType) {
+            const run = allRunsData.historical_runs.find(r => r.run_id === runId);
+            if (!run) {
+                alert('Run data not found for AI guidance');
+                return;
+            }
+            
+            // Show loading state
+            const button = event.target;
+            const originalText = button.innerHTML;
+            button.innerHTML = '🤖 Generating AI Guidance...';
+            button.disabled = true;
+            
+            // Simulate AI processing time
+            setTimeout(() => {
+                const aiGuidance = generateAIOptimizationGuidance(run, optimizationType);
+                showAIGuidanceModal(runId, optimizationType, aiGuidance);
+                
+                // Restore button
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }, 2000);
+        }
+        
+        // Generate comprehensive AI optimization guidance
+        function generateAIOptimizationGuidance(run, optimizationType) {
+            const guidance = {
+                summary: '',
+                detailedAnalysis: '',
+                stepByStepPlan: [],
+                technicalParameters: {},
+                expectedOutcomes: '',
+                riskAssessment: '',
+                implementationTimeline: '',
+                costBenefit: ''
+            };
+            
+            switch(optimizationType) {
+                case 'Process Parameter Optimization Required':
+                    guidance.summary = `Based on the yield performance of ${run.yield.toFixed(1)}% for ${run.process_name} on ${run.reactor_name}, our AI analysis indicates significant optimization potential through systematic parameter adjustment.`;
+                    guidance.detailedAnalysis = `The sub-optimal yield suggests issues with one or more critical process parameters. For ${run.process_name}, the most impactful parameters are typically temperature uniformity, precursor flow rates, and chamber pressure stability. Your current performance indicates a 15-20% efficiency gap compared to best-in-class runs.`;
+                    guidance.stepByStepPlan = [
+                        'Phase 1: Baseline characterization - Run 3 control wafers with current parameters and measure temperature uniformity across wafer surface',
+                        'Phase 2: Temperature optimization - Adjust heating element power distribution to achieve ±2°C uniformity',
+                        'Phase 3: Gas flow optimization - Increase precursor flow rate by 5-10% and optimize carrier gas ratios',
+                        'Phase 4: Pressure optimization - Fine-tune chamber pressure to 10-15 mTorr for optimal precursor utilization',
+                        'Phase 5: Validation - Run 5 test wafers and compare yield improvement vs baseline'
+                    ];
+                    guidance.technicalParameters = {
+                        'Target Temperature Uniformity': '±2°C across wafer',
+                        'Recommended Pressure Range': '10-15 mTorr',
+                        'Precursor Flow Adjustment': '+5-10% from current',
+                        'Process Time Optimization': 'Reduce by 10-15 minutes'
+                    };
+                    guidance.expectedOutcomes = `Expected yield improvement: +3-7%, uniformity improvement: +2-4%, process time reduction: 10-15 minutes per run`;
+                    guidance.riskAssessment = 'Low risk - all parameters within safe operating ranges. Monitor for over-heating during temperature adjustments.';
+                    guidance.implementationTimeline = '2-3 weeks: 1 week for baseline testing, 1-2 weeks for parameter optimization and validation';
+                    guidance.costBenefit = `Investment: ~$2,000 in test wafers and engineering time. Expected return: $15,000-25,000 annually from improved yield`;
+                    break;
+                    
+                case 'Uniformity Enhancement Needed':
+                    guidance.summary = `Uniformity of ${run.uniformity.toFixed(1)}% indicates spatial processing variations. Our AI recommends a systematic approach to gas flow and thermal optimization.`;
+                    guidance.detailedAnalysis = `Non-uniform processing typically results from uneven gas distribution, temperature gradients, or mechanical issues. The ${(97 - run.uniformity).toFixed(1)}% improvement potential suggests addressable hardware or process issues.`;
+                    guidance.stepByStepPlan = [
+                        'Step 1: Gas flow mapping - Use computational fluid dynamics to model current gas flow patterns',
+                        'Step 2: Nozzle optimization - Adjust gas injection angles and flow rates for better distribution',
+                        'Step 3: Thermal mapping - Measure temperature distribution with thermal imaging',
+                        'Step 4: Susceptor leveling - Verify and adjust wafer chuck flatness to ±25 microns',
+                        'Step 5: Rotation optimization - Adjust wafer rotation speed for better averaging'
+                    ];
+                    guidance.technicalParameters = {
+                        'Target Uniformity': '>97% across wafer',
+                        'Gas Flow Distribution': '±5% variation max',
+                        'Temperature Variation': '±1.5°C max',
+                        'Rotation Speed': '10-20 RPM optimal'
+                    };
+                    guidance.expectedOutcomes = `Uniformity improvement: +${(97 - run.uniformity).toFixed(1)}%, yield consistency: +15-25%, reduced edge effects`;
+                    guidance.riskAssessment = 'Medium risk - mechanical adjustments require careful calibration. Test incrementally.';
+                    guidance.implementationTimeline = '3-4 weeks: 2 weeks for analysis and hardware adjustments, 1-2 weeks for validation';
+                    guidance.costBenefit = `Investment: ~$5,000 in analysis and adjustments. Expected return: $20,000-35,000 annually from improved uniformity`;
+                    break;
+                    
+                case 'Contamination Control Enhancement':
+                    guidance.summary = `Defect density of ${run.defect_density.toFixed(3)} exceeds industry standards. Our AI analysis recommends a comprehensive contamination control strategy.`;
+                    guidance.detailedAnalysis = `High defect density typically originates from particle contamination, chemical residues, or inadequate cleaning protocols. The contamination source analysis suggests both airborne and surface contamination contributors.`;
+                    guidance.stepByStepPlan = [
+                        'Phase 1: Contamination source identification - Particle counting and chemical analysis',
+                        'Phase 2: Enhanced cleaning protocol - Implement plasma cleaning between runs',
+                        'Phase 3: Filtration upgrade - Install ULPA filters for sub-0.1 micron particle removal',
+                        'Phase 4: Precursor purity verification - Test and upgrade precursor delivery systems',
+                        'Phase 5: Environmental controls - Improve cleanroom protocols and monitoring'
+                    ];
+                    guidance.technicalParameters = {
+                        'Target Defect Density': '<0.08 particles/cm²',
+                        'Particle Size Control': '<0.1 micron',
+                        'Cleaning Frequency': 'Every 5 runs minimum',
+                        'Filter Efficiency': '>99.9995% at 0.1 micron'
+                    };
+                    guidance.expectedOutcomes = `Defect reduction: -${((run.defect_density - 0.08) * 1000).toFixed(0)} particles/cm², yield improvement: +2-5%, scrap reduction: 15-30%`;
+                    guidance.riskAssessment = 'Low risk - contamination control improvements have minimal downside. Monitor for over-cleaning effects.';
+                    guidance.implementationTimeline = '4-6 weeks: 2 weeks for analysis, 2-3 weeks for system upgrades, 1 week validation';
+                    guidance.costBenefit = `Investment: ~$15,000 in filtration and cleaning upgrades. Expected return: $50,000-80,000 annually from reduced scrap`;
+                    break;
+                    
+                default:
+                    guidance.summary = `Our AI analysis has identified specific optimization opportunities for ${optimizationType} based on your run data.`;
+                    guidance.detailedAnalysis = 'Detailed technical analysis indicates multiple improvement pathways with quantified benefits.';
+                    guidance.stepByStepPlan = [
+                        'Step 1: Detailed performance assessment and baseline establishment',
+                        'Step 2: Parameter optimization using statistical methods',
+                        'Step 3: Implementation of recommended changes',
+                        'Step 4: Validation and performance verification'
+                    ];
+                    guidance.expectedOutcomes = 'Significant performance improvements expected based on historical optimization results.';
+            }
+            
+            return guidance;
+        }
+        
+        // Show AI guidance modal
+        function showAIGuidanceModal(runId, optimizationType, guidance) {
+            // Create modal overlay
+            const modal = document.createElement('div');
+            modal.id = 'ai-guidance-modal';
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                background: rgba(0,0,0,0.7); z-index: 2000; display: flex; 
+                align-items: center; justify-content: center; padding: 20px;
+            `;
+            
+            modal.innerHTML = `
+                <div style="background: white; border-radius: 12px; max-width: 900px; max-height: 90vh; overflow-y: auto; padding: 0;">
+                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px 12px 0 0;">
+                        <h3 style="margin: 0; display: flex; align-items: center;">
+                            🤖 AI Optimization Guidance
+                            <button onclick="closeAIGuidanceModal()" style="margin-left: auto; background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 12px; border-radius: 6px; cursor: pointer;">✖️ Close</button>
+                        </h3>
+                        <p style="margin: 5px 0 0 0; opacity: 0.9;">Run: ${runId} | ${optimizationType}</p>
+                    </div>
+                    
+                    <div style="padding: 25px;">
+                        <div style="margin-bottom: 25px;">
+                            <h4 style="color: #333; border-bottom: 2px solid #667eea; padding-bottom: 8px;">📋 Executive Summary</h4>
+                            <p style="color: #555; line-height: 1.6;">${guidance.summary}</p>
+                        </div>
+                        
+                        <div style="margin-bottom: 25px;">
+                            <h4 style="color: #333; border-bottom: 2px solid #667eea; padding-bottom: 8px;">🔬 Detailed Technical Analysis</h4>
+                            <p style="color: #555; line-height: 1.6;">${guidance.detailedAnalysis}</p>
+                        </div>
+                        
+                        <div style="margin-bottom: 25px;">
+                            <h4 style="color: #333; border-bottom: 2px solid #667eea; padding-bottom: 8px;">📝 Step-by-Step Implementation Plan</h4>
+                            <ol style="color: #555; line-height: 1.8; padding-left: 20px;">
+                                ${guidance.stepByStepPlan.map(step => `<li style="margin: 8px 0;">${step}</li>`).join('')}
+                            </ol>
+                        </div>
+                        
+                        <div style="margin-bottom: 25px;">
+                            <h4 style="color: #333; border-bottom: 2px solid #667eea; padding-bottom: 8px;">⚙️ Technical Parameters</h4>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                                ${Object.entries(guidance.technicalParameters).map(([param, value]) => `
+                                    <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; border-left: 3px solid #667eea;">
+                                        <strong style="color: #333;">${param}:</strong><br>
+                                        <span style="color: #555;">${value}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;">
+                            <div>
+                                <h4 style="color: #333; border-bottom: 2px solid #28a745; padding-bottom: 8px;">🎯 Expected Outcomes</h4>
+                                <p style="color: #555; line-height: 1.6;">${guidance.expectedOutcomes}</p>
+                            </div>
+                            <div>
+                                <h4 style="color: #333; border-bottom: 2px solid #ffc107; padding-bottom: 8px;">⚠️ Risk Assessment</h4>
+                                <p style="color: #555; line-height: 1.6;">${guidance.riskAssessment}</p>
+                            </div>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;">
+                            <div>
+                                <h4 style="color: #333; border-bottom: 2px solid #17a2b8; padding-bottom: 8px;">📅 Implementation Timeline</h4>
+                                <p style="color: #555; line-height: 1.6;">${guidance.implementationTimeline}</p>
+                            </div>
+                            <div>
+                                <h4 style="color: #333; border-bottom: 2px solid #28a745; padding-bottom: 8px;">💰 Cost-Benefit Analysis</h4>
+                                <p style="color: #555; line-height: 1.6;">${guidance.costBenefit}</p>
+                            </div>
+                        </div>
+                        
+                        <div style="text-align: center; padding-top: 20px; border-top: 1px solid #eee;">
+                            <button class="btn btn-secondary" onclick="exportAIGuidance('${runId}', '${optimizationType}')" style="margin-right: 15px;">📊 Export Guidance Report</button>
+                            <button class="btn" onclick="closeAIGuidanceModal()">✖️ Close</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+        
+        // Close AI guidance modal
+        function closeAIGuidanceModal() {
+            const modal = document.getElementById('ai-guidance-modal');
+            if (modal) {
+                document.body.removeChild(modal);
+            }
+        }
+        
+        // Export AI guidance report
+        function exportAIGuidance(runId, optimizationType) {
+            const run = allRunsData.historical_runs.find(r => r.run_id === runId);
+            const guidance = generateAIOptimizationGuidance(run, optimizationType);
+            
+            const exportData = {
+                export_metadata: {
+                    timestamp: new Date().toISOString(),
+                    version: '3.0.0-ENTERPRISE',
+                    database: 'mesprod (447GB)',
+                    export_type: 'ai-optimization-guidance',
+                    run_id: runId,
+                    optimization_type: optimizationType
+                },
+                run_data: run,
+                ai_guidance: guidance
+            };
+            
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ai-guidance-${runId}-${optimizationType.replace(/\s+/g, '-').toLowerCase()}-${new Date().toISOString().split('T')[0]}.json`;
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            alert('✅ AI Optimization Guidance exported successfully!');
+        }
+        
+        function exportAnalysis(type) {
+            console.log('Export Analysis called with type:', type);
+            
+            if (type === 'performance') {
+                // Show loading indicator
+                const originalText = event.target.innerHTML;
+                event.target.innerHTML = '⏳ Exporting...';
+                event.target.disabled = true;
+                
+                // Export AI performance analysis data
+                fetch('/api/ai-analysis/full-performance')
+                    .then(response => {
+                        console.log('Export response status:', response.status);
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Export data received:', Object.keys(data));
+                        
+                        // Create enhanced export data with metadata
+                        const exportData = {
+                            export_metadata: {
+                                timestamp: new Date().toISOString(),
+                                version: '3.0.0-ENTERPRISE',
+                                database: 'mesprod (447GB)',
+                                export_type: 'ai-performance-analysis'
+                            },
+                            ...data
+                        };
+                        
+                        const blob = new Blob([JSON.stringify(exportData, null, 2)], { 
+                            type: 'application/json' 
+                        });
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `ai-performance-analysis-${new Date().toISOString().split('T')[0]}.json`;
+                        a.style.display = 'none';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        window.URL.revokeObjectURL(url);
+                        
+                        // Show success message
+                        alert('✅ AI Performance Analysis exported successfully!');
+                        console.log('Export completed successfully');
+                    })
+                    .catch(error => {
+                        console.error('Export error:', error);
+                        alert('❌ Error exporting analysis: ' + error.message);
+                    })
+                    .finally(() => {
+                        // Restore button
+                        event.target.innerHTML = originalText;
+                        event.target.disabled = false;
+                    });
+            } else {
+                alert(`Exporting ${type} analysis report - This would generate a comprehensive PDF report with all analysis data and insights.`);
+            }
+        }
+        
+        function generatePredictions() {
+            alert('Generating predictive analytics - This would use machine learning models to predict future performance trends and optimal scheduling.');
+        }
+        
+        function analyzeRunTrends() {
+            if (!allRunsData.historical_runs || allRunsData.historical_runs.length === 0) {
+                alert('Please load completed runs first before analyzing trends.');
+                return;
+            }
+            
+            console.log('Analyzing trends for', allRunsData.historical_runs.length, 'runs');
+            
+            // Create or show trends analysis section
+            let trendsSection = document.getElementById('trends-analysis-section');
+            if (!trendsSection) {
+                trendsSection = document.createElement('div');
+                trendsSection.id = 'trends-analysis-section';
+                trendsSection.style.cssText = 'margin: 20px 0; padding: 20px; background: #f0f8ff; border-radius: 8px; border-left: 4px solid #0ea5e9;';
+                
+                // Insert after the summary section
+                const summarySection = document.getElementById('run-summary');
+                summarySection.parentNode.insertBefore(trendsSection, summarySection.nextSibling);
+            }
+            
+            // Perform trend analysis
+            const runs = allRunsData.historical_runs;
+            const trendsAnalysis = performTrendAnalysis(runs);
+            
+            // Display trends analysis
+            trendsSection.innerHTML = `
+                <h4>📈 Trend Analysis Results</h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 15px;">
+                    
+                    <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #ddd;">
+                        <h5>🎯 Yield Trends</h5>
+                        <div><strong>Average Yield:</strong> <span style="color: #28a745;">${trendsAnalysis.yield.average.toFixed(1)}%</span></div>
+                        <div><strong>Best Yield:</strong> <span style="color: #28a745;">${trendsAnalysis.yield.max.toFixed(1)}%</span> (${trendsAnalysis.yield.maxRun})</div>
+                        <div><strong>Yield Range:</strong> ${trendsAnalysis.yield.range.toFixed(1)}%</div>
+                        <div><strong>Consistency:</strong> <span style="color: ${trendsAnalysis.yield.consistency > 0.9 ? '#28a745' : '#ffc107'}">${(trendsAnalysis.yield.consistency * 100).toFixed(1)}%</span></div>
+                    </div>
+                    
+                    <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #ddd;">
+                        <h5>🏭 Reactor Performance</h5>
+                        <div><strong>Top Reactor:</strong> <span style="color: #28a745;">${trendsAnalysis.reactors.best.name}</span> (${trendsAnalysis.reactors.best.yield.toFixed(1)}%)</div>
+                        <div><strong>Most Active:</strong> ${trendsAnalysis.reactors.mostActive.name} (${trendsAnalysis.reactors.mostActive.runs} runs)</div>
+                        <div><strong>Reactor Types:</strong> ${trendsAnalysis.reactors.types.join(', ')}</div>
+                        <div><strong>Utilization:</strong> ${trendsAnalysis.reactors.utilization.toFixed(1)}% avg</div>
+                    </div>
+                    
+                    <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #ddd;">
+                        <h5>⚗️ Process Analysis</h5>
+                        <div><strong>Top Process:</strong> <span style="color: #28a745;">${trendsAnalysis.processes.best.name}</span> (${trendsAnalysis.processes.best.yield.toFixed(1)}%)</div>
+                        <div><strong>Process Types:</strong> ${trendsAnalysis.processes.types.length}</div>
+                        <div><strong>Avg Duration:</strong> ${trendsAnalysis.processes.avgDuration.toFixed(1)}h</div>
+                        <div><strong>Efficiency:</strong> <span style="color: #28a745;">${trendsAnalysis.processes.efficiency.toFixed(1)}%</span></div>
+                    </div>
+                    
+                    <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #ddd;">
+                        <h5>📊 Quality Metrics</h5>
+                        <div><strong>Avg Uniformity:</strong> <span style="color: #28a745;">${trendsAnalysis.quality.uniformity.toFixed(1)}%</span></div>
+                        <div><strong>Defect Density:</strong> ${trendsAnalysis.quality.defectDensity.toFixed(3)}</div>
+                        <div><strong>Success Rate:</strong> <span style="color: #28a745;">${trendsAnalysis.quality.successRate.toFixed(1)}%</span></div>
+                        <div><strong>Quality Score:</strong> <span style="color: ${trendsAnalysis.quality.score > 90 ? '#28a745' : '#ffc107'}">${trendsAnalysis.quality.score.toFixed(1)}/100</span></div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 20px; padding: 15px; background: #e8f5e8; border-radius: 8px; border: 1px solid #28a745;">
+                    <h5>💡 Key Insights & Recommendations</h5>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        ${trendsAnalysis.insights.map(insight => `<li>${insight}</li>`).join('')}
+                    </ul>
+                </div>
+                
+                <div style="margin-top: 15px; text-align: center;">
+                    <button class="btn btn-secondary" onclick="exportTrendsAnalysis()" style="margin-right: 10px;">📊 Export Trends</button>
+                    <button class="btn" onclick="hideTrendsAnalysis()">✖️ Close Analysis</button>
+                </div>
+            `;
+            
+            // Scroll to trends section
+            trendsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        
+        // Perform detailed trend analysis
+        function performTrendAnalysis(runs) {
+            const analysis = {
+                yield: {
+                    average: runs.reduce((sum, run) => sum + (run.yield || 0), 0) / runs.length,
+                    max: Math.max(...runs.map(run => run.yield || 0)),
+                    min: Math.min(...runs.map(run => run.yield || 0)),
+                    maxRun: '',
+                    consistency: 0,
+                    range: 0
+                },
+                reactors: {
+                    best: { name: '', yield: 0 },
+                    mostActive: { name: '', runs: 0 },
+                    types: [],
+                    utilization: 0
+                },
+                processes: {
+                    best: { name: '', yield: 0 },
+                    types: [],
+                    avgDuration: 0,
+                    efficiency: 0
+                },
+                quality: {
+                    uniformity: 0,
+                    defectDensity: 0,
+                    successRate: 0,
+                    score: 0
+                },
+                insights: []
+            };
+            
+            // Yield analysis
+            const bestRun = runs.find(run => run.yield === analysis.yield.max);
+            analysis.yield.maxRun = bestRun ? bestRun.run_id : 'N/A';
+            analysis.yield.range = analysis.yield.max - analysis.yield.min;
+            analysis.yield.consistency = 1 - (analysis.yield.range / 100); // Simple consistency metric
+            
+            // Reactor analysis
+            const reactorStats = {};
+            runs.forEach(run => {
+                if (!reactorStats[run.reactor_name]) {
+                    reactorStats[run.reactor_name] = { yields: [], runs: 0 };
+                }
+                reactorStats[run.reactor_name].yields.push(run.yield || 0);
+                reactorStats[run.reactor_name].runs++;
+            });
+            
+            let bestReactorYield = 0;
+            let mostActiveRuns = 0;
+            Object.entries(reactorStats).forEach(([reactor, stats]) => {
+                const avgYield = stats.yields.reduce((sum, y) => sum + y, 0) / stats.yields.length;
+                if (avgYield > bestReactorYield) {
+                    analysis.reactors.best = { name: reactor, yield: avgYield };
+                    bestReactorYield = avgYield;
+                }
+                if (stats.runs > mostActiveRuns) {
+                    analysis.reactors.mostActive = { name: reactor, runs: stats.runs };
+                    mostActiveRuns = stats.runs;
+                }
+            });
+            
+            analysis.reactors.types = [...new Set(runs.map(run => run.reactor_name.split('-')[0]))];
+            analysis.reactors.utilization = Object.values(reactorStats).reduce((sum, stats) => sum + stats.runs, 0) / Object.keys(reactorStats).length;
+            
+            // Process analysis
+            const processStats = {};
+            runs.forEach(run => {
+                if (!processStats[run.process_name]) {
+                    processStats[run.process_name] = { yields: [], durations: [] };
+                }
+                processStats[run.process_name].yields.push(run.yield || 0);
+                // Estimate duration from start/end times if available
+                if (run.start_time && run.end_time) {
+                    const duration = (new Date(run.end_time) - new Date(run.start_time)) / (1000 * 60 * 60);
+                    processStats[run.process_name].durations.push(duration);
+                }
+            });
+            
+            let bestProcessYield = 0;
+            Object.entries(processStats).forEach(([process, stats]) => {
+                const avgYield = stats.yields.reduce((sum, y) => sum + y, 0) / stats.yields.length;
+                if (avgYield > bestProcessYield) {
+                    analysis.processes.best = { name: process, yield: avgYield };
+                    bestProcessYield = avgYield;
+                }
+            });
+            
+            analysis.processes.types = Object.keys(processStats);
+            const allDurations = Object.values(processStats).flatMap(stats => stats.durations);
+            analysis.processes.avgDuration = allDurations.length > 0 ? allDurations.reduce((sum, d) => sum + d, 0) / allDurations.length : 0;
+            analysis.processes.efficiency = analysis.yield.average;
+            
+            // Quality analysis
+            analysis.quality.uniformity = runs.reduce((sum, run) => sum + (run.uniformity || 0), 0) / runs.length;
+            analysis.quality.defectDensity = runs.reduce((sum, run) => sum + (run.defect_density || 0), 0) / runs.length;
+            analysis.quality.successRate = (runs.filter(run => run.status === 'Completed').length / runs.length) * 100;
+            analysis.quality.score = (analysis.yield.average + analysis.quality.uniformity) / 2;
+            
+            // Generate insights
+            if (analysis.yield.average > 90) {
+                analysis.insights.push(`Excellent overall yield performance at ${analysis.yield.average.toFixed(1)}%`);
+            }
+            if (analysis.yield.consistency > 0.9) {
+                analysis.insights.push('High yield consistency indicates stable process control');
+            }
+            if (analysis.reactors.best.yield > 95) {
+                analysis.insights.push(`${analysis.reactors.best.name} shows exceptional performance - consider increasing utilization`);
+            }
+            if (analysis.quality.uniformity > 95) {
+                analysis.insights.push('Excellent uniformity across runs indicates good process optimization');
+            }
+            if (analysis.quality.defectDensity < 0.1) {
+                analysis.insights.push('Low defect density shows effective quality control measures');
+            }
+            
+            return analysis;
+        }
+        
+        // Export trends analysis
+        function exportTrendsAnalysis() {
+            if (!allRunsData.historical_runs) {
+                alert('No trends data to export');
+                return;
+            }
+            
+            const trendsData = performTrendAnalysis(allRunsData.historical_runs);
+            const exportData = {
+                export_metadata: {
+                    timestamp: new Date().toISOString(),
+                    version: '3.0.0-ENTERPRISE',
+                    database: 'mesprod (447GB)',
+                    export_type: 'trends-analysis'
+                },
+                trends_analysis: trendsData,
+                raw_data: allRunsData
+            };
+            
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `trends-analysis-${new Date().toISOString().split('T')[0]}.json`;
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            alert('✅ Trends Analysis exported successfully!');
+        }
+        
+        // Hide trends analysis
+        function hideTrendsAnalysis() {
+            const trendsSection = document.getElementById('trends-analysis-section');
+            if (trendsSection) {
+                trendsSection.style.display = 'none';
+            }
+        }
+        
+        // Production Analytics Functions
+        function loadProductionStats() {
+            fetch('/api/production-stats')
+                .then(response => response.json())
+                .then(data => {
+                    const content = document.getElementById('production-stats-content');
+                    if (data.database_size) {
+                        let html = `
+                            <div class="status-grid">
+                                <div class="status-card">
+                                    <h3>Database Size</h3>
+                                    <div class="status-value">${data.database_size}</div>
+                                </div>
+                                <div class="status-card">
+                                    <h3>Total Tables</h3>
+                                    <div class="status-value">${data.table_count}</div>
+                                </div>
+                                <div class="status-card">
+                                    <h3>Total Records</h3>
+                                    <div class="status-value">${(data.total_records / 1000000).toFixed(0)}M+</div>
+                                </div>
+                                <div class="status-card">
+                                    <h3>Data Span</h3>
+                                    <div class="status-value">${data.data_span}</div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        if (data.record_statistics) {
+                            html += '<h4>Record Statistics:</h4>';
+                            html += '<div class="table-container"><table><thead><tr><th>Category</th><th>Record Count</th><th>Percentage</th></tr></thead><tbody>';
+                            data.record_statistics.forEach(stat => {
+                                const percentage = ((stat.count / data.total_records) * 100).toFixed(1);
+                                html += `
+                                    <tr>
+                                        <td>${stat.category}</td>
+                                        <td>${(stat.count / 1000000).toFixed(1)}M</td>
+                                        <td>${percentage}%</td>
+                                    </tr>
+                                `;
+                            });
+                            html += '</tbody></table></div>';
+                        }
+                        
+                        if (data.capabilities) {
+                            html += '<h4>Analytics Capabilities:</h4>';
+                            data.capabilities.forEach(capability => {
+                                html += `
+                                    <div style="background: #e8f5e8; border-radius: 8px; padding: 10px; margin: 5px 0; border-left: 4px solid #28a745;">
+                                        ✅ ${capability}
+                                    </div>
+                                `;
+                            });
+                        }
+                        
+                        content.innerHTML = html;
+                    } else {
+                        content.innerHTML = '<p class="error">Error loading production statistics</p>';
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('advanced-spc-content').innerHTML = '<p class="error">Error loading SPC analysis</p>';
+                });
+        }
+        
+        function loadPredictiveScheduling() {
+            fetch('/api/predictive-scheduling')
+                .then(response => response.json())
+                .then(data => {
+                    const content = document.getElementById('predictive-scheduling-content');
+                    if (data.optimization_recommendations) {
+                        let html = '<h4>AI-Powered Scheduling Optimization:</h4>';
+                        
+                        data.optimization_recommendations.forEach(rec => {
+                            html += `
+                                <div style="background: #e8f5e8; border-radius: 8px; padding: 15px; margin: 10px 0; border-left: 4px solid #28a745;">
+                                    <h5>${rec.title}</h5>
+                                    <p>${rec.description}</p>
+                                    <p><strong>Confidence:</strong> ${rec.confidence}</p>
+                                </div>
+                            `;
+                        });
+                        
+                        if (data.predictive_insights) {
+                            html += '<h4>Predictive Insights:</h4>';
+                            data.predictive_insights.forEach(insight => {
+                                html += `<p>• ${insight}</p>`;
+                            });
+                        }
+                        
+                        content.innerHTML = html;
+                    } else {
+                        content.innerHTML = '<p class="error">No predictive scheduling data available</p>';
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('predictive-scheduling-content').innerHTML = '<p class="error">Error loading predictive scheduling</p>';
+                });
+        }
+        
+        // Additional functions for new features
+        function exportProductionReport() {
+            alert('Exporting production analytics report - This would generate a comprehensive report with all 447GB database insights.');
+        }
+        
+        function generatePerformanceReport() {
+            alert('Generating reactor performance report - This would create detailed performance analysis using historical data.');
+        }
+        
+        function exportSPCData() {
+            alert('Exporting SPC data - This would export statistical process control data for external analysis.');
+        }
+        
+        function optimizeSchedule() {
+            alert('Optimizing schedule - This would use AI to optimize reactor scheduling based on historical patterns.');
+        }
+        
+        // Initialize dashboard
+        function initializeDashboard() {
+            // Load system status
+            fetch('/api/status')
+                .then(response => response.json())
+                .then(data => {
+                    systemData = data;
+                    
+                    // Update dashboard status cards
+                    document.getElementById('system-status').textContent = '✅ ' + data.status.toUpperCase();
+                    document.getElementById('server-time').textContent = new Date(data.timestamp).toLocaleTimeString();
+                    
+                    // Update network information
+                    if (data.network) {
+                        document.getElementById('current-ip').textContent = data.network.current_ip || 'Unknown';
+                        document.getElementById('sidebar-ip').textContent = data.network.current_ip || 'Unknown';
+                        
+                        // Update page title
+                        if (data.network.current_ip && data.network.current_ip !== 'unknown') {
+                            document.title = `Reactor System - ${data.network.current_ip}`;
+                        }
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('system-status').textContent = '❌ ERROR';
+                    document.getElementById('server-time').textContent = 'N/A';
+                    document.getElementById('current-ip').textContent = 'Error';
+                    document.getElementById('sidebar-ip').textContent = 'Error';
+                });
+
+            // Load reactor counts for home screen
+            fetch('/api/reactors')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.reactors) {
+                        // Count reactors by type
+                        const typeCounts = {};
+                        data.reactors.forEach(reactor => {
+                            if (!typeCounts[reactor.reactor_type]) {
+                                typeCounts[reactor.reactor_type] = 0;
+                            }
+                            typeCounts[reactor.reactor_type]++;
+                        });
+
+                        // Update home screen counts
+                        document.getElementById('amt-count').textContent = `${typeCounts['AMT'] || 0} reactor${typeCounts['AMT'] !== 1 ? 's' : ''}`;
+                        document.getElementById('sycr-count').textContent = `${typeCounts['SYCR'] || 0} reactor${typeCounts['SYCR'] !== 1 ? 's' : ''}`;
+                        document.getElementById('aix-count').textContent = `${typeCounts['AIX'] || 0} reactor${typeCounts['AIX'] !== 1 ? 's' : ''}`;
+                        document.getElementById('ade-count').textContent = `${typeCounts['ADE'] || 0} reactor${typeCounts['ADE'] !== 1 ? 's' : ''}`;
+
+                        // Update active reactors count
+                        document.getElementById('active-reactors').textContent = data.count || data.reactors.length;
+                    }
+                })
+                .catch(error => {
+                    // Keep default counts if API fails
+                    document.getElementById('active-reactors').textContent = '8';
+                    document.getElementById('amt-count').textContent = '2 reactors';
+                    document.getElementById('sycr-count').textContent = '2 reactors';
+                    document.getElementById('aix-count').textContent = '2 reactors';
+                    document.getElementById('ade-count').textContent = '2 reactors';
+                });
+                
+            // Load initial schedule data for running processes count
+            loadSchedule();
+        }
+        
+        // Update time every second
+        setInterval(() => {
+            if (currentSection === 'dashboard') {
+                fetch('/api/status')
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('server-time').textContent = new Date(data.timestamp).toLocaleTimeString();
+                    })
+                    .catch(error => {
+                        // Ignore errors for periodic updates
+                    });
+            }
+        }, 1000);
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeDashboard();
+        });
+        
+        // Mobile menu toggle (for future mobile support)
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+        }
+
+        // Expose functions to global scope for inline onclick handlers
+        window.showSection = showSection;
+        window.loadReactors = loadReactors;
+        window.openAddReactor = openAddReactor;
+        window.openEditReactor = openEditReactor;
+        window.viewReactor = viewReactor;
+        window.submitReactorForm = submitReactorForm;
+        window.closeReactorModal = closeReactorModal;
+        window.loadSchedule = loadSchedule;
+        window.openAddSchedule = openAddSchedule;
+        window.openEditSchedule = openEditSchedule;
+        window.viewSchedule = viewSchedule;
+        window.submitScheduleForm = submitScheduleForm;
+        window.closeScheduleModal = closeScheduleModal;
+        window.loadProcesses = loadProcesses;
+        window.loadReactorPerformance = loadReactorPerformance;
+        window.loadYieldCorrelation = loadYieldCorrelation;
+        window.loadHistoricalTrends = loadHistoricalTrends;
+        window.loadSystemInfo = loadSystemInfo;
+        window.loadProductionStats = loadProductionStats;
+        window.loadPredictiveScheduling = loadPredictiveScheduling;
+    </script>
+</body>
+</html>

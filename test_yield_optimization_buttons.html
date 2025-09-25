@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Yield Optimization Buttons</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .btn { 
+            background: #667eea; 
+            color: white; 
+            padding: 10px 20px; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            margin: 10px; 
+        }
+        .btn:hover { background: #5a6fd8; }
+        .result { 
+            margin: 20px 0; 
+            padding: 15px; 
+            border: 1px solid #ddd; 
+            border-radius: 5px; 
+            background: #f9f9f9; 
+        }
+        .error { color: red; }
+        .success { color: green; }
+        .table-container { overflow-x: auto; margin: 10px 0; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1>🎯 Yield Optimization Button Test</h1>
+    <p>This page tests the yield optimization buttons to ensure they work correctly.</p>
+    
+    <div>
+        <button class="btn" onclick="testLoadYieldCorrelation()">🔄 Test Analyze Yields Button</button>
+        <button class="btn" onclick="testOptimizeParameters()">🎯 Test Optimize Parameters Button</button>
+        <button class="btn" onclick="clearResults()">🗑️ Clear Results</button>
+    </div>
+    
+    <div id="yield-correlation-result" class="result" style="display: none;">
+        <h3>Analyze Yields Result:</h3>
+        <div id="yield-correlation-content"></div>
+    </div>
+    
+    <div id="parameter-optimization-result" class="result" style="display: none;">
+        <h3>Optimize Parameters Result:</h3>
+        <div id="parameter-optimization-content"></div>
+    </div>
+
+    <script>
+        // Test the loadYieldCorrelation function
+        function testLoadYieldCorrelation() {
+            const resultDiv = document.getElementById('yield-correlation-result');
+            const content = document.getElementById('yield-correlation-content');
+            
+            resultDiv.style.display = 'block';
+            content.innerHTML = '<p>🔄 Loading yield correlation analysis...</p>';
+            
+            fetch('/api/ai-analysis/full-performance')
+                .then(response => response.json())
+                .then(data => {
+                    let html = '<h4>🎯 Yield Performance Analysis:</h4>';
+                    
+                    // Process Performance Analysis
+                    if (data.process_performance && data.process_performance.length > 0) {
+                        html += '<h5>Process Performance Summary:</h5>';
+                        html += '<div class="table-container"><table><thead><tr><th>Process</th><th>Avg Yield (%)</th><th>Success Rate (%)</th><th>Avg Duration (hrs)</th><th>Performance</th></tr></thead><tbody>';
+                        data.process_performance.forEach(entry => {
+                            const yieldColor = entry.avg_yield > 90 ? '#28a745' : entry.avg_yield > 80 ? '#ffc107' : '#dc3545';
+                            html += `
+                                <tr>
+                                    <td>${entry.process}</td>
+                                    <td style="color: ${yieldColor}; font-weight: bold;">${entry.avg_yield.toFixed(1)}%</td>
+                                    <td style="color: ${entry.success_rate > 95 ? '#28a745' : '#ffc107'};">${entry.success_rate.toFixed(1)}%</td>
+                                    <td>${entry.avg_duration.toFixed(1)}</td>
+                                    <td>
+                                        <div style="width: 100px; height: 8px; background: #e9ecef; border-radius: 4px; overflow: hidden;">
+                                            <div style="width: ${entry.avg_yield}%; height: 100%; background: ${yieldColor};"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                        html += '</tbody></table></div>';
+                    }
+                    
+                    // Add optimization recommendations
+                    if (data.optimization_recommendations && data.optimization_recommendations.length > 0) {
+                        html += '<h5>💡 Optimization Recommendations:</h5>';
+                        data.optimization_recommendations.forEach(rec => {
+                            const impactColor = rec.impact === 'High' ? '#dc3545' : rec.impact === 'Medium' ? '#ffc107' : '#28a745';
+                            html += `
+                                <div style="background: #f8f9fa; border-radius: 8px; padding: 15px; margin: 10px 0; border-left: 4px solid ${impactColor};">
+                                    <h6 style="margin: 0 0 8px 0; color: ${impactColor};">
+                                        <span style="background: ${impactColor}; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7em; margin-right: 8px;">${rec.impact.toUpperCase()}</span>
+                                        ${rec.title}
+                                    </h6>
+                                    <p style="margin: 5px 0; color: #666;">${rec.description}</p>
+                                    <p style="margin: 5px 0; font-weight: bold; color: #28a745;">💰 ${rec.estimated_improvement}</p>
+                                </div>
+                            `;
+                        });
+                    }
+                    
+                    content.innerHTML = html + '<p class="success">✅ Analyze Yields button is working correctly!</p>';
+                })
+                .catch(error => {
+                    console.error('Error loading performance analysis:', error);
+                    content.innerHTML = '<p class="error">❌ Error loading performance analysis: ' + error.message + '</p>';
+                });
+        }
+
+        // Test the optimizeParameters function
+        function testOptimizeParameters() {
+            const resultDiv = document.getElementById('parameter-optimization-result');
+            const content = document.getElementById('parameter-optimization-content');
+            
+            resultDiv.style.display = 'block';
+            content.innerHTML = '<p>🔄 Loading parameter optimization...</p>';
+            
+            fetch('/api/reactor-assignment')
+                .then(response => response.json())
+                .then(data => {
+                    let html = '<h4>🎯 Optimal Parameter Optimization:</h4>';
+                    
+                    // Show AI insights first
+                    if (data.insights && data.insights.length > 0) {
+                        html += '<h5>🤖 AI Insights:</h5>';
+                        data.insights.forEach(insight => {
+                            const insightColor = insight.type === 'optimal_assignment' ? '#28a745' : '#007bff';
+                            html += `
+                                <div style="background: #f8f9fa; border-radius: 8px; padding: 15px; margin: 10px 0; border-left: 4px solid ${insightColor};">
+                                    <h6 style="margin: 0 0 8px 0; color: ${insightColor};">
+                                        ${insight.type === 'optimal_assignment' ? '🎯' : '📊'} ${insight.title}
+                                    </h6>
+                                    <p style="margin: 5px 0; color: #666;">${insight.description}</p>
+                                    ${insight.yield ? `<p style="margin: 5px 0; font-weight: bold; color: #28a745;">Expected Yield: ${insight.yield}%</p>` : ''}
+                                    ${insight.avg_yield ? `<p style="margin: 5px 0; font-weight: bold; color: #28a745;">Average Yield: ${insight.avg_yield}%</p>` : ''}
+                                </div>
+                            `;
+                        });
+                    }
+                    
+                    // Show summary
+                    if (data.assignments && data.assignments.length > 0) {
+                        const compatibleAssignments = data.assignments.filter(a => a.compatibility === 'Compatible');
+                        const avgYield = compatibleAssignments.reduce((sum, a) => sum + parseFloat(a.predicted_yield), 0) / compatibleAssignments.length;
+                        
+                        html += `
+                            <div style="background: #e8f5e8; border-radius: 8px; padding: 15px; margin: 15px 0; border-left: 4px solid #28a745;">
+                                <h6 style="margin: 0 0 8px 0; color: #28a745;">📊 Optimization Summary</h6>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                                    <div>
+                                        <strong>Total Combinations:</strong> ${data.total_combinations}<br>
+                                        <strong>Compatible Assignments:</strong> ${compatibleAssignments.length}
+                                    </div>
+                                    <div>
+                                        <strong>Average Yield:</strong> ${avgYield.toFixed(1)}%<br>
+                                        <strong>AI Recommendation:</strong> ${data.ai_recommendation || 'Use SYCR reactors for highest yield processes'}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    content.innerHTML = html + '<p class="success">✅ Optimize Parameters button is working correctly!</p>';
+                })
+                .catch(error => {
+                    console.error('Error loading optimization data:', error);
+                    content.innerHTML = '<p class="error">❌ Error loading optimization data: ' + error.message + '</p>';
+                });
+        }
+
+        function clearResults() {
+            document.getElementById('yield-correlation-result').style.display = 'none';
+            document.getElementById('parameter-optimization-result').style.display = 'none';
+            document.getElementById('yield-correlation-content').innerHTML = '';
+            document.getElementById('parameter-optimization-content').innerHTML = '';
+        }
+    </script>
+</body>
+</html>
