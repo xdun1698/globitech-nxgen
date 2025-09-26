@@ -84,19 +84,17 @@ def test_buttons():
 @app.route('/test-trends')
 def test_trends():
     """Test page for historical trends buttons"""
-    with open('/home/dbadmin/test_historical_trends_buttons.html', 'r') as f:
-        return f.read()
+    return send_from_directory('.', 'test_historical_trends_buttons.html')
 
 @app.route('/test-production')
 def test_production():
     """Test page for production analytics buttons"""
-    with open('/home/dbadmin/test_production_analytics_buttons.html', 'r') as f:
-        return f.read()
+    return send_from_directory('.', 'test_production_analytics_buttons.html')
 
 @app.route('/test-predictive')
 def test_predictive():
     """Test page for predictive modeling buttons"""
-    with open('/home/dbadmin/test_predictive_modeling_buttons.html', 'r') as f:
+    with open('/home/dbadmin/test_predictive_buttons.html', 'r') as f:
         return f.read()
 
 @app.route('/api/status')

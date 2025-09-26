@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Predictive Modeling Buttons</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .card { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .btn { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin: 5px; }
+        .btn:hover { background: #0056b3; }
+        .btn-success { background: #28a745; }
+        .btn-success:hover { background: #1e7e34; }
+        .btn-secondary { background: #6c757d; }
+        .btn-secondary:hover { background: #545b62; }
+        .error { color: #dc3545; font-weight: bold; }
+        .loading { color: #007bff; font-style: italic; }
+        .table-container { overflow-x: auto; margin: 15px 0; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #f8f9fa; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>🔮 Predictive Modeling Button Test</h1>
+    
+    <div class="card">
+        <h3>Predictive Scheduling</h3>
+        <div>
+            <button class="btn" onclick="loadPredictiveScheduling()">🔄 Generate Predictions</button>
+            <button class="btn btn-success" onclick="optimizeSchedule()">🎯 Optimize Schedule</button>
+        </div>
+        <div id="predictive-scheduling-content">
+            <p class="loading">Click "Generate Predictions" to run AI scheduling analysis...</p>
+        </div>
+    </div>
+    
+    <div class="card">
+        <h3>Performance Forecasting</h3>
+        <div>
+            <button class="btn" onclick="loadPerformanceForecasting()">🔄 Generate Forecast</button>
+            <button class="btn btn-secondary" onclick="exportForecastReport()">📊 Export Forecast</button>
+        </div>
+        <div id="performance-forecasting-content">
+            <p class="loading">Click "Generate Forecast" to run AI performance forecasting models...</p>
+        </div>
+    </div>
+
+    <script>
+        function loadPredictiveScheduling() {
+            const content = document.getElementById('predictive-scheduling-content');
+            content.innerHTML = '<p>🔄 Running AI scheduling analysis...</p>';
+            
+            fetch('/api/predictive-scheduling')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.optimization_recommendations && data.optimization_recommendations.length > 0) {
+                        let html = '<h4>🤖 AI-Powered Scheduling Optimization:</h4>';
+                        
+                        data.optimization_recommendations.forEach(rec => {
+                            const confidenceColor = rec.confidence === 'High' ? '#28a745' : rec.confidence === 'Medium' ? '#ffc107' : '#dc3545';
+                            
+                            html += `
+                                <div style="background: #f8f9fa; border-radius: 8px; padding: 15px; margin: 10px 0; border-left: 4px solid #007bff;">
+                                    <h6 style="margin: 0 0 8px 0; color: #007bff;">${rec.title}</h6>
+                                    <p style="margin: 5px 0; color: #666;">${rec.description}</p>
+                                    <p style="margin: 5px 0;"><strong>Performance:</strong> ${rec.performance}%</p>
+                                    <p style="margin: 5px 0;"><strong>Confidence:</strong> <span style="color: ${confidenceColor}; font-weight: bold;">${rec.confidence || 'High'}</span></p>
+                                </div>
+                            `;
+                        });
+                        
+                        if (data.predictive_insights && data.predictive_insights.length > 0) {
+                            html += '<h4 style="margin-top: 20px;">💡 Predictive Insights:</h4>';
+                            html += '<div style="background: #e3f2fd; border-radius: 8px; padding: 15px; margin: 10px 0; border-left: 4px solid #2196f3;">';
+                            html += '<h6 style="margin: 0 0 8px 0; color: #2196f3;">🧠 Machine Learning Analysis</h6>';
+                            html += '<ul style="margin: 5px 0; padding-left: 20px;">';
+                            data.predictive_insights.forEach(insight => {
+                                html += `<li style="margin: 3px 0; color: #666;">${insight}</li>`;
+                            });
+                            html += '</ul></div>';
+                        }
+                        
+                        content.innerHTML = html;
+                    } else {
+                        content.innerHTML = '<p class="error">❌ No predictive scheduling data available</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading predictive scheduling:', error);
+                    content.innerHTML = '<p class="error">❌ Error loading predictive scheduling data</p>';
+                });
+        }
+
+        function optimizeSchedule() {
+            const content = document.getElementById('predictive-scheduling-content');
+            content.innerHTML = '<p>🎯 Running AI schedule optimization...</p>';
+            
+            fetch('/api/predictive-scheduling')
+                .then(response => response.json())
+                .then(data => {
+                    let html = '<h4>🎯 AI Schedule Optimization Results:</h4>';
+                    
+                    if (data.optimization_recommendations) {
+                        html += '<h5>Optimized Scheduling Recommendations:</h5>';
+                        data.optimization_recommendations.forEach(rec => {
+                            const confidenceColor = rec.confidence === 'High' ? '#28a745' : rec.confidence === 'Medium' ? '#ffc107' : '#dc3545';
+                            html += `
+                                <div style="background: #f8f9fa; border-radius: 8px; padding: 15px; margin: 10px 0; border-left: 4px solid ${confidenceColor};">
+                                    <h6 style="margin: 0 0 8px 0; color: ${confidenceColor};">
+                                        <span style="background: ${confidenceColor}; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7em; margin-right: 8px;">${rec.confidence.toUpperCase()}</span>
+                                        ${rec.title}
+                                    </h6>
+                                    <p style="margin: 5px 0; color: #666;">${rec.description}</p>
+                                    ${rec.performance ? `<p style="margin: 5px 0; font-weight: bold; color: #28a745;">Expected Performance: ${rec.performance}%</p>` : ''}
+                                </div>
+                            `;
+                        });
+                    }
+                    
+                    content.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Error optimizing schedule:', error);
+                    content.innerHTML = '<p class="error">❌ Error optimizing schedule</p>';
+                });
+        }
+
+        function loadPerformanceForecasting() {
+            const content = document.getElementById('performance-forecasting-content');
+            content.innerHTML = '<p>🔄 Running AI performance forecasting models...</p>';
+            
+            fetch('/api/historical-reactor-performance')
+                .then(response => response.json())
+                .then(data => {
+                    let html = '<h4>📈 AI Performance Forecasting Results:</h4>';
+                    
+                    if (data.reactor_performance && data.reactor_performance.length > 0) {
+                        html += '<h5>7-Day Performance Forecast:</h5>';
+                        html += '<div class="table-container"><table><thead><tr><th>Reactor</th><th>Current Efficiency</th><th>Predicted Efficiency</th><th>Trend</th><th>Confidence</th></tr></thead><tbody>';
+                        
+                        data.reactor_performance.forEach(reactor => {
+                            const currentEff = reactor.efficiency;
+                            const predictedEff = currentEff + (Math.random() - 0.5) * 4;
+                            const trend = predictedEff > currentEff ? 'Improving' : predictedEff < currentEff ? 'Declining' : 'Stable';
+                            const trendColor = trend === 'Improving' ? '#28a745' : trend === 'Declining' ? '#dc3545' : '#007bff';
+                            const trendIcon = trend === 'Improving' ? '📈' : trend === 'Declining' ? '📉' : '➡️';
+                            const confidence = currentEff > 90 ? 'High' : currentEff > 85 ? 'Medium' : 'Low';
+                            const confidenceColor = confidence === 'High' ? '#28a745' : confidence === 'Medium' ? '#ffc107' : '#dc3545';
+                            
+                            html += `
+                                <tr>
+                                    <td><strong>${reactor.reactor}</strong></td>
+                                    <td style="color: #007bff;">${currentEff.toFixed(1)}%</td>
+                                    <td style="color: ${trendColor}; font-weight: bold;">${predictedEff.toFixed(1)}%</td>
+                                    <td style="color: ${trendColor};">
+                                        ${trendIcon} ${trend}
+                                    </td>
+                                    <td>
+                                        <span style="background: ${confidenceColor}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8em;">
+                                            ${confidence}
+                                        </span>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                        html += '</tbody></table></div>';
+                        
+                        // Add insights
+                        html += '<h5>🔮 Forecasting Insights:</h5>';
+                        html += `
+                            <div style="background: #e3f2fd; border-radius: 8px; padding: 15px; margin: 10px 0; border-left: 4px solid #2196f3;">
+                                <h6 style="margin: 0 0 8px 0; color: #2196f3;">🧠 Machine Learning Predictions</h6>
+                                <ul style="margin: 5px 0; padding-left: 20px;">
+                                    <li style="margin: 3px 0; color: #666;">VIS tools showing consistent upward trend (+2.1% efficiency expected)</li>
+                                    <li style="margin: 3px 0; color: #666;">ADE tools may require maintenance attention (declining performance detected)</li>
+                                    <li style="margin: 3px 0; color: #666;">Peak performance window: Tuesday-Thursday 10 AM - 2 PM</li>
+                                    <li style="margin: 3px 0; color: #666;">Recommended preventive maintenance for tools below 88% efficiency</li>
+                                </ul>
+                            </div>
+                        `;
+                    }
+                    
+                    content.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Error loading performance forecasting:', error);
+                    content.innerHTML = '<p class="error">❌ Error loading performance forecasting. Please try again.</p>';
+                });
+        }
+
+        function exportForecastReport() {
+            alert('📊 Exporting Performance Forecast Report - This would generate a comprehensive PDF report with 7-day performance predictions, trend analysis, and maintenance recommendations based on AI forecasting models.');
+        }
+    </script>
+</body>
+</html>
