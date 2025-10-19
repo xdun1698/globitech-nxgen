@@ -97,6 +97,12 @@ def test_predictive():
     with open('/home/dbadmin/test_predictive_buttons.html', 'r') as f:
         return f.read()
 
+@app.route('/test-analysis-period')
+def test_analysis_period():
+    """Test page for analysis period display"""
+    with open('/home/dbadmin/test_analysis_period.html', 'r') as f:
+        return f.read()
+
 @app.route('/api/status')
 def status():
     port = int(os.getenv('PORT', '5000'))
@@ -323,6 +329,7 @@ def get_reactors():
                     WHEN tf.family_name = 'ADE' THEN 'ADE'
                     WHEN tf.family_name = 'AIX' THEN 'AIX'
                     WHEN tf.family_name = 'VIS' THEN 'VIS'
+                    WHEN tf.family_name = 'SYS' THEN 'SYCR'
                     ELSE 'SYCR'
                 END as reactor_type,
                 CASE 
@@ -353,7 +360,7 @@ def get_reactors():
                 true as is_active
             FROM mes.gt_tools t
             JOIN mes.gt_tool_family tf ON t.tool_family_id = tf.family_id
-            WHERE tf.family_name IN ('AMT', 'ADE', 'AIX', 'VIS', 'SYCR')
+            WHERE tf.family_name IN ('AMT', 'ADE', 'AIX', 'VIS', 'SYS')
             AND t.tool_name ~ '^[A-Z]'
             ORDER BY t.tool_name
         """)
@@ -389,6 +396,7 @@ def get_reactor(reactor_id: int):
                     WHEN tf.family_name = 'ADE' THEN 'ADE'
                     WHEN tf.family_name = 'AIX' THEN 'AIX'
                     WHEN tf.family_name = 'VIS' THEN 'VIS'
+                    WHEN tf.family_name = 'SYS' THEN 'SYCR'
                     ELSE 'SYCR'
                 END as reactor_type,
                 CASE 
@@ -661,6 +669,7 @@ def get_reactor_assignment():
                     WHEN tf.family_name = 'ADE' THEN 'ADE'
                     WHEN tf.family_name = 'AIX' THEN 'AIX'
                     WHEN tf.family_name = 'VIS' THEN 'VIS'
+                    WHEN tf.family_name = 'SYS' THEN 'SYCR'
                     ELSE 'SYCR'
                 END as reactor_type,
                 CASE 
@@ -1086,13 +1095,22 @@ def get_full_performance_analysis():
 
 @app.route('/api/ai-schedule-optimization')
 def ai_schedule_optimization():
-    """AI-powered schedule optimization based on last 90 days of production data with revenue analysis"""
+    """AI-powered schedule optimization based on configurable days of production data with revenue analysis"""
     try:
+        # Get days parameter from query string (default to 90 days)
+        days = request.args.get('days', default=90, type=int)
+        
+        # Validate days parameter (minimum 7 days, maximum 365 days)
+        if days < 7:
+            days = 7
+        elif days > 365:
+            days = 365
+        
         # Get production database connection
         conn = get_production_db_connection()
         cur = conn.cursor()
         
-        # Query production data from schedule_entries table (simulating 90-day analysis)
+        # Query production data from schedule_entries table with configurable date range
         cur.execute("""
             SELECT 
                 id,
@@ -1118,10 +1136,10 @@ def ai_schedule_optimization():
                     ELSE 12
                 END as start_hour
             FROM schedule_entries
-            WHERE date::date >= NOW()::date - INTERVAL '90 days'
+            WHERE date::date >= NOW()::date - INTERVAL '%s days'
             ORDER BY date DESC
-            LIMIT 50
-        """)
+            LIMIT 100
+        """ % days)
         
         production_runs = cur.fetchall()
         cur.close()
@@ -1327,7 +1345,8 @@ def ai_schedule_optimization():
                     })
         
         return jsonify({
-            'analysis_period': '90 days',
+            'analysis_period': f'{days} days',
+            'days_analyzed': days,
             'total_runs_analyzed': len(production_runs),
             'optimization_recommendations': optimization_recommendations[:10],
             'revenue_analysis': revenue_analysis,

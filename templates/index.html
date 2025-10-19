@@ -442,7 +442,25 @@
                 <!-- AI Optimization Section -->
                 <div class="card" style="margin-bottom: 20px;">
                     <h3>🤖 AI Schedule Optimization</h3>
-                    <p>Generate optimal schedule based on 90-day production analysis with revenue impact</p>
+                    <p>Generate optimal schedule based on historical production analysis with revenue impact</p>
+                    
+                    <!-- Date Range Selector -->
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                        <label style="font-weight: bold; margin-right: 10px;">📅 Analysis Period:</label>
+                        <select id="analysis-days" onchange="updateDaysDisplay()" style="padding: 8px 12px; border: 2px solid #667eea; border-radius: 6px; font-size: 14px; margin-right: 10px; cursor: pointer;">
+                            <option value="7">Last 7 Days</option>
+                            <option value="14">Last 14 Days</option>
+                            <option value="30">Last 30 Days</option>
+                            <option value="60">Last 60 Days</option>
+                            <option value="90" selected>Last 90 Days (Default)</option>
+                            <option value="180">Last 180 Days</option>
+                            <option value="365">Last 365 Days (1 Year)</option>
+                        </select>
+                        <span style="color: #666; font-size: 0.9em;">
+                            <span id="selected-days-display">90</span> days of production data will be analyzed
+                        </span>
+                    </div>
+                    
                     <div class="btn-group">
                         <button class="btn btn-primary" onclick="generateAIOptimization()">🧠 Generate AI Optimal Schedule</button>
                         <button class="btn" onclick="loadSchedule()">🔄 Refresh Current Schedule</button>
@@ -1467,8 +1485,18 @@
                 });
         }
 
+        // Update days display when dropdown changes
+        function updateDaysDisplay() {
+            const daysSelect = document.getElementById('analysis-days');
+            const daysDisplay = document.getElementById('selected-days-display');
+            daysDisplay.textContent = daysSelect.value;
+        }
+        
         // Generate AI Schedule Optimization
         function generateAIOptimization() {
+            // Get selected days from dropdown
+            const days = document.getElementById('analysis-days').value;
+            
             // Show loading state
             const resultsDiv = document.getElementById('ai-optimization-results');
             resultsDiv.style.display = 'block';
@@ -1481,7 +1509,7 @@
             document.getElementById('runs-analyzed').textContent = 'Loading...';
             document.getElementById('tools-analyzed').textContent = 'Loading...';
             
-            fetch('/api/ai-schedule-optimization')
+            fetch(`/api/ai-schedule-optimization?days=${days}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.error) {
@@ -1496,6 +1524,7 @@
                     document.getElementById('annual-impact').textContent = `+$${revenue.revenue_impact.annual_increase.toLocaleString()}`;
                     
                     // Update performance summary
+                    document.getElementById('analysis-period').textContent = data.analysis_period || `${days} days`;
                     document.getElementById('runs-analyzed').textContent = data.total_runs_analyzed.toLocaleString();
                     document.getElementById('tools-analyzed').textContent = data.performance_summary.total_tools_analyzed;
                     document.getElementById('optimization-confidence').textContent = data.performance_summary.optimization_confidence;
@@ -3963,6 +3992,7 @@
         window.closeReactorModal = closeReactorModal;
         window.loadSchedule = loadSchedule;
         window.generateAIOptimization = generateAIOptimization;
+        window.updateDaysDisplay = updateDaysDisplay;
         window.openAddSchedule = openAddSchedule;
         window.openEditSchedule = openEditSchedule;
         window.viewSchedule = viewSchedule;

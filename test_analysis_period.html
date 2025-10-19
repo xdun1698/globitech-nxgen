@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Analysis Period Display</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; background: #f0f0f0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>Analysis Period Display Test</h1>
+    
+    <div>
+        <label>Select Days:</label>
+        <select id="test-days">
+            <option value="7">7 Days</option>
+            <option value="30">30 Days</option>
+            <option value="90" selected>90 Days</option>
+            <option value="180">180 Days</option>
+            <option value="365">365 Days</option>
+        </select>
+        <button onclick="testAnalysisPeriod()">Test API</button>
+    </div>
+    
+    <div id="results"></div>
+    
+    <script>
+        function testAnalysisPeriod() {
+            const days = document.getElementById('test-days').value;
+            const resultsDiv = document.getElementById('results');
+            
+            resultsDiv.innerHTML = '<div class="test-result">Loading...</div>';
+            
+            fetch(`/api/ai-schedule-optimization?days=${days}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        resultsDiv.innerHTML = `
+                            <div class="test-result error">
+                                <strong>Error Response (Expected for low data periods):</strong><br>
+                                Selected: ${days} days<br>
+                                Error: ${data.error}<br>
+                                <em>Fallback would display: "${days} days"</em>
+                            </div>
+                        `;
+                    } else {
+                        const analysisPeriod = data.analysis_period || `${days} days`;
+                        resultsDiv.innerHTML = `
+                            <div class="test-result success">
+                                <strong>✅ Success:</strong><br>
+                                Selected: ${days} days<br>
+                                API Returns: ${data.analysis_period}<br>
+                                Display Shows: ${analysisPeriod}<br>
+                                Runs Analyzed: ${data.total_runs_analyzed}
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    resultsDiv.innerHTML = `
+                        <div class="test-result error">
+                            <strong>Error:</strong> ${error.message}
+                        </div>
+                    `;
+                });
+        }
+        
+        // Auto-test on load
+        window.onload = () => testAnalysisPeriod();
+    </script>
+</body>
+</html>
